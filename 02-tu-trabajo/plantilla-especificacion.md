@@ -1,7 +1,7 @@
 # Especificación Formal — Sistema de Préstamo de Libros
 
-> **Autor:** [Tu nombre]
-> **Fecha:** [Fecha del taller]
+> **Autor:** Mauricio y Sophia
+> **Fecha:** 5 de mayo de 2026
 > **Versión:** 1.0
 > **Brief de origen:** Correo de Diana Restrepo, Coordinadora de Biblioteca
 
@@ -11,9 +11,8 @@
 
 ## 1. Propósito del sistema
 
-[Describe en 3-5 líneas qué hace el sistema, en tus propias palabras. No copies el correo. Reformúlalo como técnico.]
-
----
+El sistema gestiona el préstamo de libros a estudiantes de la universidad. Debe seguir unas reglas de negocio o condiciones que
+deben tenerse en cuenta para llevar un registro consistente de los libros que salen y entran de la biblioteca. 
 
 ## 2. Alcance
 
@@ -23,46 +22,79 @@
 
 **Explícitamente fuera del alcance:**
 
-- [Lista lo que el correo menciona pero NO se va a implementar. Por ejemplo: el caso de los profesores investigadores.]
-
----
+Se mencionan profesores de investigacion que tambien solicitan el préstamo de libros, pero este no será implemnetado. 
 
 ## 3. Modelo de datos
 
 ### Entidad: Libro
 
-| Campo     | Tipo     | Obligatorio | Descripción   |
-| `[campo]` | `[tipo]` | sí/no       | [descripción] |
+| Campo         | Tipo         | Obligatorio | Descripción   |
+| id            | string       | si          | Cada libro tiene un código único de inventario
+| titulo        | string       | si          | titulo del libro
+| autor         | string       | si          | autor del libro
+| ubciacionSala | string       | si          | sala en la que se encuentra el libro 
+| tipo          | string       | si          | para saber si el libro es de requerimiento normal o de alta demanda 
+
 
 ### Entidad: Ejemplar
 
 [Repite la tabla. Cada libro puede tener varios ejemplares. Decide tú la estructura.]
 
+| Campo         | Tipo         | Obligatorio | Descripción   |
+| id            | string       | si          | Cada ejemplar tiene un código único de inventario
+| idLibro       | string       | si          | id del libro al que es ejemplar 
+
+
 ### Entidad: Estudiante
 
-[Tabla de campos]
+| Campo         | Tipo         | Obligatorio | Descripción   |
+| id            | string       | si          | Cada estudiante tiene un código único
+| progAcademico | string       | si          | programa academico al que pertenece el estudiante
+| semestre      | int          | si          | semestre al que pertence el estudiante
+
 
 ### Entidad: Préstamo
 
 [Tabla de campos. Aquí va estudiante_id, ejemplar_id, fecha_prestamo, fecha_devolucion_esperada, fecha_devolucion_real, estado, etc.]
 
+| Campo                      | Tipo         | Obligatorio | Descripción   |
+| prestamo_id                | string       | si          | cada prestamo tiene un id 
+| estudiante_id              | string       | si          | debe permitir a traves del id conocer que estudiante presto el libro
+| ejemplar_id                | string       | si          | debe permitir a traves del id conocer que libro prestó el estudiante
+| fecha_prestamo             | dateTime          | si          | fecha que se realizó el prestamo
+| fecha_devolucion_esperada      | dateTime          | si          | fecha de devolucion que se esperaba 
+| fecha_devolucion_real      | dateTime          | si          | fecha real que el estudiante devolvió el libro
+| estado      | int          | boolean           | para saber si esta activo el préstamo o ya pasó
+
+
+
 ### Entidad: Multa
 
-[Tabla de campos]
+| Campo                     | Tipo         | Obligatorio | Descripción   |
+| id                        | string       | si          | Cada multa tiene un código único
+| estudiante_id             | string       | si          | id del estudiante al que pertence la multa
+| historial_id              | string       | si          | la multa debe agregarse al hitorial del estudiante, identificandose por un id 
+| fecha_devolucion_esperada | dateTime     | si          | fecha de devolucion que se esperaba 
+| fecha_devolucion_real     | dateTime     | si          | fecha real que el estudiante devolvió el libro
+| dias_retraso              | int          | si          | dias que debe pagar el estudiante por la no devolucion del libro 
+| valor                     | int          | si          | valor total que debe pagar el estudiante 
+
+### Entidad: Solicitud
+
+| Campo         | Tipo         | Obligatorio | Descripción   |
+| estudiante_id            | string       | si          | estudiante que ha realizado la solicitud
+| prestamo_id                | string       | si          | prestamo al que hace referencia esta solicitud 
+
+
 
 ### Diagrama de relaciones
 
-```
-[Dibuja con texto las relaciones. Por ejemplo:
-
-Libro 1 --- N Ejemplar
+Libro      1 --- N Ejemplar
 Estudiante 1 --- N Prestamo
-Ejemplar 1 --- N Prestamo (a lo largo del tiempo)
-Prestamo 0..1 --- 1 Multa
-]
-```
+Ejemplar   1 --- N Prestamo (a lo largo del tiempo)
+Prestamo   0..1 --- 1 Multa
+Estudiante 1 --- 1 historial
 
----
 
 ## 4. Endpoints REST
 
@@ -130,30 +162,11 @@ Prestamo 0..1 --- 1 Multa
 
 ### D2, D3, D4, D5...
 
----
 
-## 7. Preguntas pendientes para la cliente
-
-[A Diana Restrepo, ¿qué le preguntarías? Mínimo 3 preguntas]
-
-1. [Pregunta concreta, no vaga]
-2. [...]
-3. [...]
-
-**Ejemplo de pregunta concreta:**
-
-> "Cuando un estudiante de pregrado pasa a posgrado a mitad del semestre, su límite de préstamos pasa de 3 a 5. Si en ese momento ya tiene 4 préstamos activos (lo cual no era posible cuando era pregrado pero sí lo es ahora como posgrado), ¿el sistema debe aceptar préstamos adicionales hasta el nuevo límite, o congelar los préstamos hasta que devuelva alguno?"
-
-**Ejemplo de pregunta vaga (a evitar):**
-
-> "¿Cómo manejamos los cambios de programa?"
-
----
-
-## 8. Códigos HTTP usados
+## 7. Códigos HTTP usados
 
 | Código | Significado | Cuándo se usa |
-|---|---|---|
+
 | 200 | OK | GET exitosos |
 | 201 | Created | POST exitosos que crean recursos |
 | 400 | Bad Request | Body malformado o validación fallida |
@@ -161,14 +174,11 @@ Prestamo 0..1 --- 1 Multa
 | 409 | Conflict | Reglas de negocio violadas (límite alcanzado, duplicado, etc.) |
 | 500 | Internal Server Error | Error no controlado del servidor |
 
-[Si usas otros, agrégalos.]
+## 8. Restricciones técnicas
 
----
-
-## 9. Restricciones técnicas
-
-- **Stack:** [Node.js + Express / Python + FastAPI / etc.]
+- **Stack:** Node.js + Express
 - **Persistencia:** datos en memoria. No usar base de datos.
-- **TypeScript** (según tu stack).
+- **TypeScript** 
 - **Sin autenticación** en esta versión.
 - **Sin frontend** en esta versión. Solo API REST.
+
