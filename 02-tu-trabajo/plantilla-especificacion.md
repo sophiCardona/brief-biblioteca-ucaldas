@@ -174,6 +174,9 @@ Estudiante 1 --- 1 historial
 | 409 | Conflict | Reglas de negocio violadas (límite alcanzado, duplicado, etc.) |
 | 500 | Internal Server Error | Error no controlado del servidor |
 
+
+---
+
 ## 8. Restricciones técnicas
 
 - **Stack:** Node.js + Express
