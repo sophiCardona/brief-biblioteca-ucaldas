@@ -27,11 +27,12 @@ Se mencionan profesores de investigacion que tambien solicitan el préstamo de l
 ### Entidad: Libro
 
 | Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada libro tiene un código único de inventario
-| titulo        | string       | si          | titulo del libro
-| autor         | string       | si          | autor del libro
-| ubciacionSala | string       | si          | sala en la que se encuentra el libro 
-| tipo          | string       | si          | para saber si el libro es de requerimiento normal o de alta demanda 
+|---------------|--------------|-------------|---------------|
+| id            | string       | si          | Cada libro tiene un código único de inventario |
+| titulo        | string       | si          | titulo del libro |
+| autor         | string       | si          | autor del libro |
+| ubciacionSala | string       | si          | sala en la que se encuentra el libro |
+| tipo          | string       | si          | para saber si el libro es de requerimiento normal o de alta demanda |
 
 
 ### Entidad: Ejemplar
@@ -39,16 +40,18 @@ Se mencionan profesores de investigacion que tambien solicitan el préstamo de l
 [Repite la tabla. Cada libro puede tener varios ejemplares. Decide tú la estructura.]
 
 | Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada ejemplar tiene un código único de inventario
-| idLibro       | string       | si          | id del libro al que es ejemplar 
+|---------------|--------------|-------------|---------------|
+| id            | string       | si          | Cada ejemplar tiene un código único de inventario |
+| idLibro       | string       | si          | id del libro al que es ejemplar |
 
 
 ### Entidad: Estudiante
 
 | Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada estudiante tiene un código único
-| progAcademico | string       | si          | programa academico al que pertenece el estudiante
-| semestre      | int          | si          | semestre al que pertence el estudiante
+|---------------|--------------|-------------|---------------|
+| id            | string       | si          | Cada estudiante tiene un código único |
+| progAcademico | string       | si          | programa academico al que pertenece el estudiante |
+| semestre      | int          | si          | semestre al que pertence el estudiante |
 
 
 ### Entidad: Préstamo
@@ -56,32 +59,35 @@ Se mencionan profesores de investigacion que tambien solicitan el préstamo de l
 [Tabla de campos. Aquí va estudiante_id, ejemplar_id, fecha_prestamo, fecha_devolucion_esperada, fecha_devolucion_real, estado, etc.]
 
 | Campo                      | Tipo         | Obligatorio | Descripción   |
-| prestamo_id                | string       | si          | cada prestamo tiene un id 
-| estudiante_id              | string       | si          | debe permitir a traves del id conocer que estudiante presto el libro
-| ejemplar_id                | string       | si          | debe permitir a traves del id conocer que libro prestó el estudiante
-| fecha_prestamo             | dateTime          | si          | fecha que se realizó el prestamo
-| fecha_devolucion_esperada      | dateTime          | si          | fecha de devolucion que se esperaba 
-| fecha_devolucion_real      | dateTime          | si          | fecha real que el estudiante devolvió el libro
-| estado      | int          | boolean           | para saber si esta activo el préstamo o ya pasó
+|----------------------------|--------------|-------------|---------------|
+| prestamo_id                | string       | si          | cada prestamo tiene un id |
+| estudiante_id              | string       | si          | debe permitir a traves del id conocer que estudiante presto el libro |
+| ejemplar_id                | string       | si          | debe permitir a traves del id conocer que libro prestó el estudiante |
+| fecha_prestamo             | dateTime     | si          | fecha que se realizó el prestamo |
+| fecha_devolucion_esperada  | dateTime     | si          | fecha de devolucion que se esperaba |
+| fecha_devolucion_real      | dateTime     | si          | fecha real que el estudiante devolvió el libro |
+| estado                     | boolean      | si          | para saber si esta activo el préstamo o ya pasó |
 
 
 
 ### Entidad: Multa
 
 | Campo                     | Tipo         | Obligatorio | Descripción   |
-| id                        | string       | si          | Cada multa tiene un código único
-| estudiante_id             | string       | si          | id del estudiante al que pertence la multa
-| historial_id              | string       | si          | la multa debe agregarse al hitorial del estudiante, identificandose por un id 
-| fecha_devolucion_esperada | dateTime     | si          | fecha de devolucion que se esperaba 
-| fecha_devolucion_real     | dateTime     | si          | fecha real que el estudiante devolvió el libro
-| dias_retraso              | int          | si          | dias que debe pagar el estudiante por la no devolucion del libro 
-| valor                     | int          | si          | valor total que debe pagar el estudiante 
+|---------------------------|--------------|-------------|---------------|
+| id                        | string       | si          | Cada multa tiene un código único |
+| estudiante_id             | string       | si          | id del estudiante al que pertence la multa |
+| historial_id              | string       | si          | la multa debe agregarse al hitorial del estudiante, identificandose por un id |
+| fecha_devolucion_esperada | dateTime     | si          | fecha de devolucion que se esperaba |
+| fecha_devolucion_real     | dateTime     | si          | fecha real que el estudiante devolvió el libro |
+| dias_retraso              | int          | si          | dias que debe pagar el estudiante por la no devolucion del libro |
+| valor                     | int          | si          | valor total que debe pagar el estudiante |
 
 ### Entidad: Solicitud
 
 | Campo         | Tipo         | Obligatorio | Descripción   |
-| estudiante_id            | string       | si          | estudiante que ha realizado la solicitud
-| prestamo_id                | string       | si          | prestamo al que hace referencia esta solicitud 
+|---------------|--------------|-------------|---------------|
+| estudiante_id | string       | si          | estudiante que ha realizado la solicitud |
+| prestamo_id   | string       | si          | prestamo al que hace referencia esta solicitud |
 
 
 
@@ -160,40 +166,60 @@ Estudiante 1 --- 1 historial
 
 ## 6. Decisiones tomadas (lo que el correo no dice)
 
-### D1 — Cálculo de días para multa
-
-- *Contexto:* el correo no precisa si los días de retraso son calendario o hábiles.
-- *Decisión:* usar días calendario.
-- *Justificación:* es la interpretación más simple y se alinea con lo que la mayoría de bibliotecas hacen.
-
-### D2 — [Decisión que tomaste]
-
-- *Contexto:* [qué hueco había]
-- *Decisión:* [qué decidiste]
-- *Justificación:* [por qué esta decisión y no otra]
-
-### D3 — [Decisión que tomaste]
-
-- *Contexto:* [qué hueco había]
-- *Decisión:* [qué decidiste]
-- *Justificación:* [por qué esta decisión y no otra]
-
-### D4 — [Decisión que tomaste]
-
-- *Contexto:* [qué hueco había]
-- *Decisión:* [qué decidiste]
-- *Justificación:* [por qué esta decisión y no otra]
-
-### D5 — [Decisión que tomaste]
-
-- *Contexto:* [qué hueco había]
-- *Decisión:* [qué decidiste]
-- *Justificación:* [por qué esta decisión y no otra]
-
-[Mínimo 5 decisiones documentadas.]
-
+### D1 — Separación entre Libro y Ejemplar
+- **Contexto:** el correo menciona libros con varios ejemplares, pero no define estructura.
+- **Decisión:** modelar `Libro` y `Ejemplar` como entidades separadas.
+- **Justificación:** permite controlar disponibilidad real por unidad física y no solo por título.
 
 ---
+
+### D2 — Estados de préstamo
+- **Contexto:** no se define el ciclo de vida del préstamo.
+- **Decisión:** usar estados `activo`, `devuelto`, `vencido`.
+- **Justificación:** simplifica el control de reglas de negocio y consultas.
+
+---
+
+### D3 — Manejo de multas
+- **Contexto:** no se especifica sistema de pagos.
+- **Decisión:** manejar solo registro de deuda en `multas_pendientes`.
+- **Justificación:** la versión actual no incluye integración financiera.
+
+---
+
+### D4 — Cálculo de tiempo (días)
+- **Contexto:** no se define si los días son hábiles o calendario.
+- **Decisión:** usar días calendario.
+- **Justificación:** simplifica implementación y evita ambigüedad.
+
+---
+
+### D5 — Renovaciones y “solicitudes de otros usuarios”
+- **Contexto:** el correo menciona solicitudes de otros estudiantes pero no define cómo existen.
+- **Decisión:** simularlo como validación lógica (flag o estado futuro de solicitud).
+- **Justificación:** evita agregar un módulo adicional de reservas en esta fase.
+
+---
+
+### D6 — Identificación de estudiantes
+- **Contexto:** se da código único pero no sistema de autenticación.
+- **Decisión:** usar `id` como identificador único sin login.
+- **Justificación:** esta versión es solo API interna, no sistema de seguridad.
+
+---
+
+### D7 — Notificaciones de vencimiento
+- **Contexto:** se pide “avisar sobre préstamos vencidos”.
+- **Decisión:** solo endpoint de consulta de vencidos, sin envío automático.
+- **Justificación:** no hay integración con correo o push en esta versión.
+
+---
+
+### D8 — Persistencia en memoria
+- **Contexto:** se menciona uso temporal antes de base de datos.
+- **Decisión:** almacenar todo en estructuras en memoria (listas/diccionarios).
+- **Justificación:** requisito explícito del alcance inicial del proyecto.
+
 
 ## 7. Códigos HTTP usados
 
@@ -206,6 +232,7 @@ Estudiante 1 --- 1 historial
 | 409 | Conflict | Reglas de negocio violadas (límite alcanzado, duplicado, etc.) |
 | 500 | Internal Server Error | Error no controlado del servidor |
 
+[Si usas otros, agrégalos.]
 [Si usas otros, agrégalos.]
 
 
