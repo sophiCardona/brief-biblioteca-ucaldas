@@ -207,6 +207,7 @@ Estudiante 1 --- 1 historial
 | 500 | Internal Server Error | Error no controlado del servidor |
 
 [Si usas otros, agrégalos.]
+[Si usas otros, agrégalos.]
 
 
 ## 8. Restricciones técnicas
