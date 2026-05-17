@@ -31,62 +31,67 @@ Se mencionan profesores de investigacion que tambien solicitan el préstamo de l
 
 ### Entidad: Libro
 
-| Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada libro tiene un código único de inventario
-| titulo        | string       | si          | titulo del libro
-| autor         | string       | si          | autor del libro
-| ubciacionSala | string       | si          | sala en la que se encuentra el libro 
-| tipo          | string       | si          | para saber si el libro es de requerimiento normal o de alta demanda 
-
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único de inventario del libro |
+| titulo | string | sí | Título del libro |
+| autor | string | sí | Autor del libro |
+| ubicacionSala | string | sí | Sala en la que se encuentra el libro |
+| tipo | string | sí | Tipo de libro: "normal" o "altaDemanda" |
 
 ### Entidad: Ejemplar
 
-[Repite la tabla. Cada libro puede tener varios ejemplares. Decide tú la estructura.]
-
-| Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada ejemplar tiene un código único de inventario
-| idLibro       | string       | si          | id del libro al que es ejemplar 
-
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único de inventario del ejemplar |
+| idLibro | string | sí | ID del libro al que pertenece este ejemplar |
+| estado | string | sí | Estado: "disponible", "prestado", "dañado" |
 
 ### Entidad: Estudiante
 
-| Campo         | Tipo         | Obligatorio | Descripción   |
-| id            | string       | si          | Cada estudiante tiene un código único
-| progAcademico | string       | si          | programa academico al que pertenece el estudiante
-| semestre      | int          | si          | semestre al que pertence el estudiante
-
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único del estudiante |
+| nombre | string | sí | Nombre completo del estudiante |
+| correo | string | sí | Correo institucional del estudiante |
+| programaAcademico | string | sí | Programa académico del estudiante |
+| semestre | int | sí | Semestre actual del estudiante |
+| tipo | string | sí | Tipo: "pregrado" o "posgrado" |
 
 ### Entidad: Préstamo
 
-[Tabla de campos. Aquí va estudiante_id, ejemplar_id, fecha_prestamo, fecha_devolucion_esperada, fecha_devolucion_real, estado, etc.]
-
-| Campo                      | Tipo         | Obligatorio | Descripción   |
-| prestamo_id                | string       | si          | cada prestamo tiene un id 
-| estudiante_id              | string       | si          | debe permitir a traves del id conocer que estudiante presto el libro
-| ejemplar_id                | string       | si          | debe permitir a traves del id conocer que libro prestó el estudiante
-| fecha_prestamo             | dateTime          | si          | fecha que se realizó el prestamo
-| fecha_devolucion_esperada      | dateTime          | si          | fecha de devolucion que se esperaba 
-| fecha_devolucion_real      | dateTime          | si          | fecha real que el estudiante devolvió el libro
-| estado      | int          | boolean           | para saber si esta activo el préstamo o ya pasó
-
-
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único del préstamo |
+| estudianteId | string | sí | ID del estudiante que realiza el préstamo |
+| ejemplarId | string | sí | ID del ejemplar prestado |
+| fechaPrestamo | dateTime | sí | Fecha en que se realizó el préstamo |
+| fechaDevolucionEsperada | dateTime | sí | Fecha esperada de devolución |
+| fechaDevolucionReal | dateTime | no | Fecha real de devolución (null si aún no devuelve) |
+| estado | string | sí | Estado: "activo", "devuelto", "vencido" |
 
 ### Entidad: Multa
 
-| Campo                     | Tipo         | Obligatorio | Descripción   |
-| id                        | string       | si          | Cada multa tiene un código único
-| estudiante_id             | string       | si          | id del estudiante al que pertence la multa
-| historial_id              | string       | si          | la multa debe agregarse al hitorial del estudiante, identificandose por un id 
-| fecha_devolucion_esperada | dateTime     | si          | fecha de devolucion que se esperaba 
-| fecha_devolucion_real     | dateTime     | si          | fecha real que el estudiante devolvió el libro
-| dias_retraso              | int          | si          | dias que debe pagar el estudiante por la no devolucion del libro 
-| valor                     | int          | si          | valor total que debe pagar el estudiante 
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único de la multa |
+| estudianteId | string | sí | ID del estudiante con multa |
+| prestamoId | string | sí | ID del préstamo asociado |
+| fechaDevolucionEsperada | dateTime | sí | Fecha de devolución esperada |
+| fechaDevolucionReal | dateTime | sí | Fecha real de devolución |
+| diasRetraso | int | sí | Número de días de retraso |
+| valor | decimal | sí | Valor en pesos de la multa |
+| estado | string | sí | Estado: "pendiente", "pagada" |
 
 ### Entidad: Solicitud
 
-| Campo         | Tipo         | Obligatorio | Descripción   |
-| estudiante_id            | string       | si          | estudiante que ha realizado la solicitud
-| prestamo_id                | string       | si          | prestamo al que hace referencia esta solicitud 
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| id | string | sí | Código único de la solicitud |
+| estudianteId | string | sí | ID del estudiante que solicita |
+| ejemplarId | string | sí | ID del ejemplar solicitado |
+| fechaSolicitud | dateTime | sí | Fecha de la solicitud |
+| estado | string | sí | Estado: "pendiente", "completada", "cancelada" | 
 
 
 
