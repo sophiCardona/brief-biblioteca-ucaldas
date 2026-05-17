@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "moduleResolution": "Node",
+    "moduleResolution": "Node10",
     "rootDir": ".",
     "outDir": "dist",
     "strict": true,
@@ -14,7 +14,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "ignoreDeprecations": "6.0",
     "types": ["node", "jest"]
   },
   "include": ["src", "tests", "jest.config.ts"],
