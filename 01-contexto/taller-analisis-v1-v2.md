@@ -204,10 +204,18 @@ Registra y compara:
 
 Abre el archivo `proyecto-v2/tests/unit/CrearPrestamo.test.ts` y responde:
 
+En esta API diseñada con Clean Architecture, diseñado con ia no cuenta con tests unitarios por ende no hay nada como "CrearPrestamo.test.ts" en el proyecto-v2, sin embargo, se puede encontrar un test de integración que prueba la creación de un préstamo y verifica la RN1, el cual se encuentra en "proyecto-v2/tests/integration/CrearPrestamo.test.ts", específicamente el test "test_RN1_estudiante_pregrado_no_puede_tener_4_prestamos_activos".
+
 1. ¿Qué técnica de aislamiento se usa? (mocks, stubs, fakes, spies)
+- Se usa In-Memory Store (almacenamiento fake). Los tests usan la app completa (rutas, servicios, validaciones reales), pero con una base de datos en memoria (`store.reset()` en línea 6). NO hay mocks de repositorios ni jest.fn(). Es una técnica de aislamiento por sustitución del almacenamiento, no por aislamiento unitario.
 2. ¿Se levanta algún servidor HTTP para ejecutar este test? ¿Por qué importa esto?
-4. Identifica en qué línea(s) del archivo se prueba la **RN4** (multa pendiente) y la **RN3** (préstamos vencidos pendientes).
-5. ¿Cuánto tiempo tarda en ejecutarse este test? Corre `npm 
+- Sí, se levanta la app Express completa (línea 2: `import { app }`). Supertest simula requests HTTP reales contra la app sin levantar un servidor en puerto. Importa porque: prueba el flujo real (routes → servicios → store), es más realista que unitarios, pero es más lento que tests unitarios puros. Cualquier cambio en las rutas o formato de respuestas se detecta inmediatamente.
+3. Identifica en qué línea(s) del archivo se prueba la **RN3** (préstamos vencidos pendientes) y la **RN4** (solicitudes pendientes).
+- **RN3**: Líneas 74-95, test `test_RN3_estudiante_con_prestamo_vencido_no_puede_crear_nuevo_prestamo`. Crea un préstamo con fecha 2026-01-01 (vencido) y verifica que el 2do préstamo en 2026-05-12 devuelve 409 con error "prestamo_vencidos_o_multas_pendientes".
+- **RN4**: Líneas 97-145, test `test_RN4_renovacion_bloqueada_por_solicitudes_pendientes`. Crea un préstamo, luego otra estudiante crea una solicitud sobre él, y verifica que renovar devuelve 409 con error "renovacion_no_permitida_solicitudes_pendientes".
+4. ¿Cuánto tiempo tarda en ejecutarse esta suite de tests? Corre `npm test` para verificarlo.
+- **1.997 segundos (1997 ms)** para toda la suite (5 tests). Todos los tests pasaron. Ver línea final de npm test: "Time: 1.997 s".
+
 
 ---
 
@@ -221,14 +229,48 @@ En `proyecto-v2`, escribe un test unitario para `CrearPrestamo` que verifique qu
 Plantilla de inicio:
 
 ```typescript
-it('RN1 — posgrado falla al intentar el sexto préstamo', async () => {
-  const vigentes: Prestamo[] = Array.from({ length: 5 }, (_, i) => ({
-    // completa los campos necesarios
-  }));
-  // construye el caso de uso con los repos mockeados
-  // verifica que lanza LimitePrestamosAlcanzado
-});
+it("test_RN1_estudiante_posgrado_no_puede_tener_5_prestamos_activos", async () => {
+    await request(app).post("/libros").send({
+      id: "L1",
+      titulo: "Libro",
+      autor: "Autor",
+      ubicacion_sala: "Sala A",
+      tipo: "normal"
+    });
+
+    await request(app).post("/estudiantes").send({
+      id: "E1",
+      progAcademico: "Ing Sistemas",
+      semestre: 4,
+      tipo: "posgrado"
+    });
+
+    for (let i = 1; i <= 6; i += 1) {
+      await request(app).post("/ejemplares").send({ id: `EJ${i}`, idLibro: "L1" });
+    }
+
+    for (let i = 1; i <= 5; i += 1) {
+      const response = await request(app).post("/prestamos").send({
+        id: `P${i}`,
+        estudiante_id: "E1",
+        ejemplar_id: `EJ${i}`,
+        fecha_prestamo: "2026-05-12T10:00:00.000Z"
+      });
+      expect(response.status).toBe(201);
+    }
+
+    const sixth = await request(app).post("/prestamos").send({
+      id: "P6",
+      estudiante_id: "E1",
+      ejemplar_id: "EJ4",
+      fecha_prestamo: "2026-05-12T10:00:00.000Z"
+    });
+
+    expect(sixth.status).toBe(409);
+    expect(sixth.body.error).toBe("limite_prestamos_alcanzado");
+  });
 ```
 
 Una vez terminado, reflexiona: ¿por qué sería más lento o difícil escribir este test en v1?
+Al no tener una arquitectura en capas ni validaciones formales, el código de v1 no tiene una función clara y aislada para la lógica de creación de préstamos. La lógica de negocio está mezclada con las rutas HTTP, por lo que para probar esta regla de negocio (RN1) habría que levantar el servidor y hacer peticiones HTTP reales, lo que es mucho más lento que un test unitario directo a la función del servicio en v2. Además, sin validaciones formales, sería difícil incluso detectar dónde implementar la restricción de 5 préstamos para posgrado, lo que haría el proceso aún más tedioso.
 
