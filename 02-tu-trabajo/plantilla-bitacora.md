@@ -1,4 +1,4 @@
-# Bitácora del Taller — [Tu nombre]
+# Bitácora del Taller — Sophia Cardona - Mauricio Gonzáles
 
 > **Documento vivo.** Llénalo a medida que avanzas. No esperes al final.
 
@@ -8,7 +8,44 @@
 
 ### Inventario inicial
 
-- **Archivos generados por la IA:** [lista]
+- **Archivos generados por la IA:** 
+
+Version1 
+[package.json (con Express como dependencia), src/index.js (servidor Express con 6 endpoints principales), y README.md (con instrucciones de instalación y ejemplos curl).]
+
+Version2 
+Raíz:
+package.json
+tsconfig.json
+.gitignore
+.env
+
+src/core:
+src/core/entities.ts
+src/core/errors.ts
+src/core/services/libraryService.ts
+
+src/infrastructure:
+
+src/infrastructure/memory/store.ts
+
+src/interfaces/http:
+
+src/interfaces/http/app.ts
+src/interfaces/http/routes.ts
+
+src:
+
+src/server.ts
+
+tests:
+
+tests/api.test.ts
+
+Configuración de tests:
+
+jest.config.ts
+
 - **Dependencias instaladas:** [lista]
 - **Dependencias que NO pediste pero la IA agregó:** [lista]
 - **Archivos que NO pediste pero la IA generó:** [lista]
