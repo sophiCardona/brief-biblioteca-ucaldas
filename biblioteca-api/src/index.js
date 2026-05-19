@@ -31,7 +31,7 @@ app.post('/loans', (req, res) => {
   const book = books.find(b => b.id === Number(bookId));
   if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
   if (book.availableCopies <= 0) return res.status(400).json({ error: 'No hay copias disponibles' });
-
+  // no se cumple la primer restriccion simmplemente crea el prestamo, no se valida si el usuario ya tiene prestamos.
   const loan = {
     id: nextLoanId++,
     bookId: book.id,

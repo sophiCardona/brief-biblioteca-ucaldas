@@ -2,8 +2,6 @@
 
 > **Autor:** Mauricio y Sophia
 > **Fecha:** 5 de mayo de 2026
-> **Autor:** Mauricio y Sophia
-> **Fecha:** 5 de mayo de 2026
 > **Versión:** 1.0
 > **Brief de origen:** Correo de Diana Restrepo, Coordinadora de Biblioteca
 

@@ -46,13 +46,13 @@ Recorre ambos proyectos y completa la siguiente tabla en tu bitácora:
 
 | Dimensión | v1 | v2 |
 |---|---|---|
-| Lenguaje | JavaScript | TypeScript|
-| Validación de entradas al servidor | Mínima: solo verifica que bookId y borrower existan (if (!bookId || !borrower)) | Manual robusta en la capa de servicio: verifica campos requeridos, tipos enumerados, números enteros y fechas válidas. Lanza AppError 400 ante datos inválidos |
-| Manejo de errores HTTP |Inline en cada ruta con return res.status(4xx).json(...) sin middleware centralizado |Middleware centralizado en app.ts que captura todos los AppError y responde con el código y mensaje apropiado |
-| Arquitectura (número de capas) |1 capa: todo en src/index.js (rutas, lógica y datos mezclados) |3 capas: core (entidades y servicios), infrastructure (almacenamiento), interfaces (rutas HTTP) |
-| Tests incluidos | No |Sí: Jest + Supertest  |
-| Tipado de datos |Sin tipado (JavaScript puro) |Tipado estricto con interfaces TypeScript (Libro, Estudiante, Prestamo, etc.) en entities.ts |
-| Forma de iniciar la aplicación |npm start |npm run dev (ts-node-dev) en desarrollo, npm start (node dist/) en producción |
+| **Lenguaje** | JavaScript | TypeScript |
+| **Validación de entradas al servidor** | Mínima: solo verifica `bookId` y `borrower` con `if (!bookId \|\| !borrower)` | Robusta en capa de servicio: valida campos requeridos, tipos enumerados, números enteros, fechas. Lanza `AppError` 400 |
+| **Manejo de errores HTTP** | Inline en rutas: `res.status(4xx).json(...)` Sin middleware centralizado | Middleware centralizado en `app.ts` captura todos `AppError` y responde con código y mensaje apropiado |
+| **Arquitectura** | 1 capa: todo en `src/index.js` (rutas, lógica y datos mezclados) | 3 capas: `core` (entidades, servicios), `infrastructure` (almacenamiento), `interfaces` (HTTP) |
+| **Tests** | No incluye tests | Sí: Jest + Supertest |
+| **Tipado de datos** | Sin tipado (JavaScript puro) | Tipado estricto con interfaces TS: `Libro`, `Estudiante`, `Prestamo` en `entities.ts` |
+| **Forma de iniciar** | `npm start` | Dev: `npm run dev` (ts-node-dev)<br/>Prod: `npm start` (node dist/) |
 
 ### Ejercicio 1.2 — Rastreo de una regla de negocio
 
@@ -64,15 +64,17 @@ Localiza la **RN1: límite de préstamos simultáneos por tipo de estudiante** e
 
 2. ¿En qué archivo(s) está en v2? ¿Qué capas atraviesa?
 
-- Esta en el archivo rc/core/services/libraryService.ts, atraviesa estas capas: 
+- Esta en el archivo `rc/core/services/libraryService.ts`, atraviesa estas capas:
 
+```
 HTTP Request (POST /prestamos)
-        ↓
-interfaces/http/routes.ts        ← recibe el request y llama al servicio
-        ↓
-core/services/libraryService.ts  ← aquí vive la restricción
-        ↓
-infrastructure/memory/store.ts   ← consulta los préstamos activos del estudiante
+  ↓
+interfaces/http/routes.ts           ← recibe request, llama servicio
+  ↓
+core/services/libraryService.ts     ← aquí vive la restricción RN1
+  ↓
+infrastructure/memory/store.ts      ← consulta préstamos activos del estudiante
+```
 
 3. Si el cliente pide cambiar el límite de pregrado de 3 a 4, ¿cuántos archivos hay que modificar en cada versión?
 
@@ -85,6 +87,7 @@ Version 2: Habría que modificar unicamente un archivo "src/core/services/librar
 Version 1: Habría que proparlo manualmente haciendo peticiones con postman por ejemplo y verificar que todo siga funcionando correctamente. 
 
 Version 2: Podriamos correr los test con "npm test", si algo se rompe, un test fallaria y me diría exactamente donde. En este caso, tenemos el test implementado "test_RN1_estudiante_pregrado_no_puede_tener_4_prestamos_activos", el cual arroja error 409 si se hace un 4to préstamo por tanto, habría que modificar el préstamo también en caso de que sean permitido 4 préstamos. 
+
 ---
 
 ## Bloque 2 — Análisis de calidad y comportamiento ante errores
