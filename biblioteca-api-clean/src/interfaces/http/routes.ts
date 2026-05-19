@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { LibraryService } from "../../core/services/libraryService";
-import { store } from "../../infrastructure/memory/store";
+import { store } from "../../infrastructure/sqlite/store";
 
 const router = Router();
 const service = new LibraryService(store);

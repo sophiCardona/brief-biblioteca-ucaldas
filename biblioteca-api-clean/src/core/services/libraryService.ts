@@ -10,14 +10,13 @@ import {
   Solicitud,
   StudentType
 } from "../entities";
-import { InMemoryStore } from "../../infrastructure/memory/store";
+import { SqliteStore } from "../../infrastructure/sqlite/store";
 
 const FINE_PER_DAY = 2000;
 
 export class LibraryService {
-  constructor(private readonly store: InMemoryStore) {}
+  constructor(private readonly store: SqliteStore) {}
 
-  // Convierte string a fecha valida; si falla, responde 400.
   private parseDate(value: string, fieldName: string): Date {
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) {
@@ -26,35 +25,32 @@ export class LibraryService {
     return parsed;
   }
 
-  // Normaliza cualquier fecha al formato ISO para persistencia consistente.
   private toIsoDate(date: Date): string {
     return date.toISOString();
   }
 
-  // Suma dias calendario para calcular vencimientos.
   private addDays(date: Date, days: number): Date {
     const next = new Date(date);
     next.setDate(next.getDate() + days);
     return next;
   }
 
-  // Recalcula el estado de cada prestamo (activo/vencido) usando la fecha de referencia.
   private refreshLoanStatuses(referenceDate: Date = new Date()): void {
-    this.store.prestamos.forEach((prestamo) => {
+    this.store.listPrestamos().forEach((prestamo) => {
       if (prestamo.estado === "devuelto") {
         return;
       }
 
-      const due = new Date(prestamo.fechaDevolucionEsperada);
-      if (referenceDate > due) {
-        prestamo.estado = "vencido";
-      } else {
-        prestamo.estado = "activo";
+      const expectedDate = new Date(prestamo.fechaDevolucionEsperada);
+      const nextState: Prestamo["estado"] = referenceDate > expectedDate ? "vencido" : "activo";
+
+      if (prestamo.estado !== nextState) {
+        prestamo.estado = nextState;
+        this.store.updatePrestamo(prestamo);
       }
     });
   }
 
-  // Valida campos obligatorios string (no null, no vacio, no solo espacios).
   private assertRequiredString(value: unknown, fieldName: string): string {
     if (typeof value !== "string" || value.trim() === "") {
       throw new AppError(`Campo requerido: ${fieldName}`, 400);
@@ -62,31 +58,28 @@ export class LibraryService {
     return value.trim();
   }
 
-  // Valida el tipo de libro permitido por reglas de negocio.
   private assertBookType(value: unknown): BookType {
     if (value === "normal" || value === "alta_demanda") {
       return value;
     }
+
     throw new AppError("tipo_libro_desconocido", 400);
   }
 
-  // Valida el tipo de estudiante permitido por reglas de negocio.
   private assertStudentType(value: unknown): StudentType {
     if (value === "pregrado" || value === "posgrado") {
       return value;
     }
+
     throw new AppError("Campo tipo debe ser pregrado o posgrado", 400);
   }
 
-  // CRUD de libros.
   public createLibro(input: Record<string, unknown>): Libro {
-    // Validacion: id obligatorio y unico.
     const id = this.assertRequiredString(input.id, "id");
-    if (this.store.libros.has(id)) {
+    if (this.store.hasLibro(id)) {
       throw new AppError("Libro ya existe", 409);
     }
 
-    // Validacion: titulo/autor/ubicacion no vacios y tipo de libro valido.
     const libro: Libro = {
       id,
       titulo: this.assertRequiredString(input.titulo, "titulo"),
@@ -95,78 +88,63 @@ export class LibraryService {
       tipo: this.assertBookType(input.tipo)
     };
 
-    this.store.libros.set(libro.id, libro);
+    this.store.insertLibro(libro);
     return libro;
   }
 
   public listLibros(): Libro[] {
-    return Array.from(this.store.libros.values());
+    return this.store.listLibros();
   }
 
   public getLibro(id: string): Libro {
-    const libro = this.store.libros.get(id);
+    const libro = this.store.getLibro(id);
     if (!libro) {
       throw new AppError("Libro no encontrado", 404);
     }
+
     return libro;
   }
 
   public deleteLibro(id: string): { message: string } {
-    // Validacion: no se puede eliminar un libro inexistente.
-    if (!this.store.libros.has(id)) {
+    if (!this.store.hasLibro(id)) {
       throw new AppError("Libro no encontrado", 404);
     }
 
-    this.store.libros.delete(id);
-
-    // Limpieza en cascada: si se elimina libro, se eliminan sus ejemplares.
-    Array.from(this.store.ejemplares.values())
-      .filter((ejemplar) => ejemplar.idLibro === id)
-      .forEach((ejemplar) => {
-        this.store.ejemplares.delete(ejemplar.id);
-      });
-
+    this.store.deleteLibro(id);
     return { message: "Libro eliminado" };
   }
 
-  // CRUD de ejemplares.
   public createEjemplar(input: Record<string, unknown>): Ejemplar {
-    // Validacion: id de ejemplar obligatorio y unico.
     const id = this.assertRequiredString(input.id, "id");
-    if (this.store.ejemplares.has(id)) {
+    if (this.store.hasEjemplar(id)) {
       throw new AppError("Ejemplar ya existe", 409);
     }
 
-    // Validacion: el libro padre debe existir.
     const idLibro = this.assertRequiredString(input.idLibro, "idLibro");
-    if (!this.store.libros.has(idLibro)) {
+    if (!this.store.hasLibro(idLibro)) {
       throw new AppError("Libro no encontrado", 404);
     }
 
     const ejemplar: Ejemplar = { id, idLibro };
-    this.store.ejemplares.set(ejemplar.id, ejemplar);
+    this.store.insertEjemplar(ejemplar);
     return ejemplar;
   }
 
   public listEjemplaresByLibro(idLibro: string): Ejemplar[] {
-    return Array.from(this.store.ejemplares.values()).filter((ejemplar) => ejemplar.idLibro === idLibro);
+    return this.store.listEjemplaresByLibro(idLibro);
   }
 
-  // CRUD de estudiantes.
   public createEstudiante(input: Record<string, unknown>): Estudiante {
-    // Validacion: id obligatorio y unico.
     const id = this.assertRequiredString(input.id, "id");
-    if (this.store.estudiantes.has(id)) {
+    if (this.store.hasEstudiante(id)) {
       throw new AppError("Estudiante ya existe", 409);
     }
 
-    // Validacion: semestre debe ser entero positivo.
     const semestre = Number(input.semestre);
     if (!Number.isInteger(semestre) || semestre <= 0) {
       throw new AppError("Campo semestre invalido", 400);
     }
 
-    // Validacion: programa obligatorio y tipo valido (pregrado/posgrado).
     const estudiante: Estudiante = {
       id,
       progAcademico: this.assertRequiredString(input.progAcademico, "progAcademico"),
@@ -174,30 +152,30 @@ export class LibraryService {
       tipo: this.assertStudentType(input.tipo)
     };
 
-    this.store.estudiantes.set(estudiante.id, estudiante);
+    this.store.insertEstudiante(estudiante);
     return estudiante;
   }
 
   public listEstudiantes(): Estudiante[] {
-    return Array.from(this.store.estudiantes.values());
+    return this.store.listEstudiantes();
   }
 
   public getEstudiante(id: string): Estudiante {
-    const estudiante = this.store.estudiantes.get(id);
+    const estudiante = this.store.getEstudiante(id);
     if (!estudiante) {
       throw new AppError("Estudiante no encontrado", 404);
     }
+
     return estudiante;
   }
 
   public updateEstudiante(id: string, input: Record<string, unknown>): Estudiante {
-    // Validacion: el estudiante debe existir para actualizar.
     const estudiante = this.getEstudiante(id);
 
     if (input.progAcademico !== undefined) {
       estudiante.progAcademico = this.assertRequiredString(input.progAcademico, "progAcademico");
     }
-    // Validacion parcial: si llega semestre, debe seguir siendo entero positivo.
+
     if (input.semestre !== undefined) {
       const semestre = Number(input.semestre);
       if (!Number.isInteger(semestre) || semestre <= 0) {
@@ -205,36 +183,32 @@ export class LibraryService {
       }
       estudiante.semestre = semestre;
     }
-    // Validacion parcial: si llega tipo, debe ser pregrado/posgrado.
+
     if (input.tipo !== undefined) {
       estudiante.tipo = this.assertStudentType(input.tipo);
     }
 
-    this.store.estudiantes.set(estudiante.id, estudiante);
+    this.store.updateEstudiante(estudiante);
     return estudiante;
   }
 
   public deleteEstudiante(id: string): { message: string } {
-    if (!this.store.estudiantes.has(id)) {
+    if (!this.store.hasEstudiante(id)) {
       throw new AppError("Estudiante no encontrado", 404);
     }
 
-    this.store.estudiantes.delete(id);
+    this.store.deleteEstudiante(id);
     return { message: "Estudiante eliminado" };
   }
 
-  // Crea un prestamo aplicando RN1, RN2 y RN3.
   public createPrestamo(input: Record<string, unknown>): Prestamo {
-    // Sincroniza estados antes de validar limites y bloqueos.
     this.refreshLoanStatuses();
 
-    // Validacion: id de prestamo obligatorio y unico.
     const id = this.assertRequiredString(input.id, "id");
-    if (this.store.prestamos.has(id)) {
+    if (this.store.hasPrestamo(id)) {
       throw new AppError("Prestamo ya existe", 409);
     }
 
-    // Validacion de campos base y formato de fecha de prestamo.
     const estudianteId = this.assertRequiredString(input.estudiante_id, "estudiante_id");
     const ejemplarId = this.assertRequiredString(input.ejemplar_id, "ejemplar_id");
     const fechaPrestamo = this.parseDate(
@@ -242,30 +216,27 @@ export class LibraryService {
       "fecha_prestamo"
     );
 
-    // Validacion de referencias: estudiante, ejemplar y libro deben existir.
-    const estudiante = this.store.estudiantes.get(estudianteId);
+    const estudiante = this.store.getEstudiante(estudianteId);
     if (!estudiante) {
       throw new AppError("Estudiante no encontrado", 404);
     }
 
-    const ejemplar = this.store.ejemplares.get(ejemplarId);
+    const ejemplar = this.store.getEjemplar(ejemplarId);
     if (!ejemplar) {
       throw new AppError("Ejemplar no encontrado", 404);
     }
 
-    const libro = this.store.libros.get(ejemplar.idLibro);
+    const libro = this.store.getLibro(ejemplar.idLibro);
     if (!libro) {
       throw new AppError("Libro no encontrado", 404);
     }
 
-    // RN1: limite de prestamos activos por tipo de estudiante.
     const maxAllowed = estudiante.tipo === "pregrado" ? 3 : 5;
-    const activeCount = Array.from(this.store.prestamos.values()).filter(
+    const activeCount = this.store.listPrestamos().filter(
       (prestamo) => prestamo.estudianteId === estudianteId && prestamo.estado === "activo"
     ).length;
 
     if (activeCount >= maxAllowed) {
-      // Error de negocio detallado para consumo del cliente.
       throw new AppError(
         JSON.stringify({
           error: "limite_prestamos_alcanzado",
@@ -276,31 +247,27 @@ export class LibraryService {
       );
     }
 
-    // RN3: no se permiten nuevos prestamos con vencidos o multas pendientes.
-    const hasExpiredLoans = Array.from(this.store.prestamos.values()).some(
+    const hasExpiredLoans = this.store.listPrestamos().some(
       (prestamo) => prestamo.estudianteId === estudianteId && prestamo.estado === "vencido"
     );
 
-    const hasPendingFine = Array.from(this.store.multas.values()).some((multa) => multa.estudianteId === estudianteId);
+    const hasPendingFine = this.store.hasPendingFineByEstudiante(estudianteId);
 
     if (hasExpiredLoans || hasPendingFine) {
-      // RN4: se bloquea el prestamo si hay vencidos o multas sin resolver.
       throw new AppError(
         JSON.stringify({ error: "prestamo_vencidos_o_multas_pendientes" }),
         409
       );
     }
 
-    const ejemplarActivo = Array.from(this.store.prestamos.values()).some(
+    const ejemplarActivo = this.store.listPrestamos().some(
       (prestamo) => prestamo.ejemplarId === ejemplarId && prestamo.estado !== "devuelto"
     );
 
-    // Validacion de disponibilidad: un ejemplar no puede tener 2 prestamos activos.
     if (ejemplarActivo) {
       throw new AppError("Ejemplar no disponible", 409);
     }
 
-    // RN2: plazo de devolucion segun tipo de libro.
     const days = libro.tipo === "alta_demanda" ? 3 : 15;
     const prestamo: Prestamo = {
       id,
@@ -312,56 +279,47 @@ export class LibraryService {
       estado: "activo"
     };
 
-    this.store.prestamos.set(prestamo.id, prestamo);
+    this.store.insertPrestamo(prestamo);
     return prestamo;
   }
 
-  // Consultas de prestamos.
   public listPrestamos(): Prestamo[] {
     this.refreshLoanStatuses();
-    return Array.from(this.store.prestamos.values());
+    return this.store.listPrestamos();
   }
 
   public getPrestamo(id: string): Prestamo {
     this.refreshLoanStatuses();
-    const prestamo = this.store.prestamos.get(id);
+    const prestamo = this.store.getPrestamo(id);
     if (!prestamo) {
       throw new AppError("Prestamo no encontrado", 404);
     }
+
     return prestamo;
   }
 
   public listPrestamosByEstudiante(estudianteId: string): Prestamo[] {
     this.refreshLoanStatuses();
-    // Validacion: solo se listan prestamos de un estudiante existente.
-    if (!this.store.estudiantes.has(estudianteId)) {
+    if (!this.store.hasEstudiante(estudianteId)) {
       throw new AppError("Estudiante no encontrado", 404);
     }
 
-    return Array.from(this.store.prestamos.values()).filter((prestamo) => prestamo.estudianteId === estudianteId);
+    return this.store.listPrestamos().filter((prestamo) => prestamo.estudianteId === estudianteId);
   }
 
-  // Renueva un prestamo respetando RN4 (bloqueo por solicitudes pendientes).
   public renovarPrestamo(id: string, input: Record<string, unknown>): Prestamo {
     const prestamo = this.getPrestamo(id);
-    // Validacion: no se renueva un prestamo ya cerrado.
     if (prestamo.estado === "devuelto") {
       throw new AppError("Prestamo ya finalizado", 409);
     }
 
-    const blockedByRequest = this.store.solicitudes.some(
-      (solicitud) => solicitud.prestamoId === id && solicitud.estudianteId !== prestamo.estudianteId
-    );
-
-    if (blockedByRequest) {
-      // RN4: si otro estudiante solicito ese prestamo, no se permite renovar.
+    if (this.store.hasSolicitudBlockingRenovacion(id, prestamo.estudianteId)) {
       throw new AppError(
         JSON.stringify({ error: "renovacion_no_permitida_solicitudes_pendientes" }),
         409
       );
     }
 
-    // Validacion: nueva fecha obligatoria y con formato valido.
     const nuevaFecha = this.parseDate(
       this.assertRequiredString(input.fecha_devolucion_nueva, "fecha_devolucion_nueva"),
       "fecha_devolucion_nueva"
@@ -369,36 +327,31 @@ export class LibraryService {
 
     prestamo.fechaDevolucionEsperada = this.toIsoDate(nuevaFecha);
     prestamo.estado = "activo";
-    this.store.prestamos.set(prestamo.id, prestamo);
+    this.store.updatePrestamo(prestamo);
     return prestamo;
   }
 
-  // Elimina un prestamo por id.
   public deletePrestamo(id: string): { message: string } {
-    if (!this.store.prestamos.has(id)) {
+    if (!this.store.hasPrestamo(id)) {
       throw new AppError("Prestamo no encontrado", 404);
     }
 
-    this.store.prestamos.delete(id);
+    this.store.deletePrestamo(id);
     return { message: "Prestamo eliminado" };
   }
 
-  // Registra devolucion y genera multa si existe retraso.
   public registrarDevolucion(input: Record<string, unknown>): { devolucion: Devolucion; multa: Multa | null } {
-    // Validacion: id de devolucion obligatorio y unico.
     const id = this.assertRequiredString(input.id, "id");
-    if (this.store.devoluciones.has(id)) {
+    if (this.store.hasDevolucion(id)) {
       throw new AppError("Devolucion ya existe", 409);
     }
 
-    // Validacion: prestamo debe existir y no estar previamente devuelto.
     const prestamoId = this.assertRequiredString(input.prestamo_id, "prestamo_id");
     const prestamo = this.getPrestamo(prestamoId);
     if (prestamo.estado === "devuelto") {
       throw new AppError("Prestamo ya devuelto", 409);
     }
 
-    // Validacion de formato de fecha de devolucion.
     const fechaDevolucion = this.parseDate(
       this.assertRequiredString(input.fecha_devolucion, "fecha_devolucion"),
       "fecha_devolucion"
@@ -406,14 +359,12 @@ export class LibraryService {
 
     prestamo.fechaDevolucionReal = this.toIsoDate(fechaDevolucion);
     prestamo.estado = "devuelto";
-    this.store.prestamos.set(prestamo.id, prestamo);
+    this.store.updatePrestamo(prestamo);
 
-    // Calcula dias de mora usando dias calendario (ceil para contar fraccion de dia como 1).
     const dueDate = new Date(prestamo.fechaDevolucionEsperada);
     const delayMs = fechaDevolucion.getTime() - dueDate.getTime();
     const daysLate = Math.max(0, Math.ceil(delayMs / (1000 * 60 * 60 * 24)));
 
-    // Si hay mora, se crea y guarda la multa asociada al prestamo.
     let multa: Multa | null = null;
     if (daysLate > 0) {
       multa = {
@@ -425,7 +376,7 @@ export class LibraryService {
         diasRetraso: daysLate,
         valor: daysLate * FINE_PER_DAY
       };
-      this.store.multas.set(multa.id, multa);
+      this.store.insertMulta(multa);
     }
 
     const devolucion: Devolucion = {
@@ -435,46 +386,41 @@ export class LibraryService {
       multaId: multa?.id ?? null
     };
 
-    this.store.devoluciones.set(devolucion.id, devolucion);
+    this.store.insertDevolucion(devolucion);
     return { devolucion, multa };
   }
 
-  // Consultas y registro de solicitudes de reserva.
   public getDevolucion(id: string): Devolucion {
-    const devolucion = this.store.devoluciones.get(id);
+    const devolucion = this.store.getDevolucion(id);
     if (!devolucion) {
       throw new AppError("Devolucion no encontrada", 404);
     }
+
     return devolucion;
   }
 
   public createSolicitud(input: Record<string, unknown>): Solicitud {
-    // Validacion: ids obligatorios.
     const estudianteId = this.assertRequiredString(input.estudiante_id, "estudiante_id");
     const prestamoId = this.assertRequiredString(input.prestamo_id, "prestamo_id");
 
-    // Validacion referencial: estudiante y prestamo deben existir.
-    if (!this.store.estudiantes.has(estudianteId)) {
+    if (!this.store.hasEstudiante(estudianteId)) {
       throw new AppError("Estudiante no encontrado", 404);
     }
-    if (!this.store.prestamos.has(prestamoId)) {
+
+    if (!this.store.hasPrestamo(prestamoId)) {
       throw new AppError("Prestamo no encontrado", 404);
     }
 
-    // Validacion de unicidad: evita solicitudes duplicadas para la misma pareja estudiante-prestamo.
-    const exists = this.store.solicitudes.some(
-      (solicitud) => solicitud.estudianteId === estudianteId && solicitud.prestamoId === prestamoId
-    );
-    if (exists) {
+    if (this.store.hasSolicitudByPair(estudianteId, prestamoId)) {
       throw new AppError("Solicitud ya existe", 409);
     }
 
     const solicitud: Solicitud = { estudianteId, prestamoId };
-    this.store.solicitudes.push(solicitud);
+    this.store.insertSolicitud(solicitud);
     return solicitud;
   }
 
   public listSolicitudes(): Solicitud[] {
-    return [...this.store.solicitudes];
+    return this.store.listSolicitudes();
   }
 }

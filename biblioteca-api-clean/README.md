@@ -1,6 +1,6 @@
 # Biblioteca API Clean
 
-API REST para gestión de préstamos de libros de Biblioteca UCaldas, implementada con Node.js + Express + TypeScript estricto, con persistencia en memoria y sin autenticación.
+API REST para gestión de préstamos de libros de Biblioteca UCaldas, implementada con Node.js + Express + TypeScript estricto, con persistencia SQLite local y sin autenticación.
 
 ## Stack
 
@@ -8,7 +8,7 @@ API REST para gestión de préstamos de libros de Biblioteca UCaldas, implementa
 - Express
 - TypeScript (strict)
 - Jest + Supertest
-- Datos en memoria (sin base de datos)
+- Persistencia SQLite local
 
 ## Estructura
 
@@ -21,7 +21,7 @@ biblioteca-api-clean/
 │   │   └── services/
 │   │       └── libraryService.ts
 │   ├── infrastructure/
-│   │   └── memory/
+│   │   └── sqlite/
 │   │       └── store.ts
 │   ├── interfaces/
 │   │   └── http/
@@ -99,3 +99,4 @@ npm test
 Copiar `.env.example` a `.env` y ajustar si hace falta:
 
 - `PORT=3000`
+- `BIBLIOTECA_DB_PATH=./data/biblioteca.sqlite`
