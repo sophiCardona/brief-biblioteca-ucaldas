@@ -1,81 +1,157 @@
 const express = require('express');
+const BookModel = require('./models/bookModel');
+const LoanModel = require('./models/loanModel');
+const { initSchema } = require('./db/schema');
+
 const app = express();
 app.use(express.json());
 
-const books = [
-  { id: 1, title: 'Estructuras de Datos', author: 'Juan Pérez', totalCopies: 3, availableCopies: 3 },
-  { id: 2, title: 'Algoritmos', author: 'María Gómez', totalCopies: 2, availableCopies: 2 },
-  { id: 3, title: 'Bases de Datos', author: 'Ana Ruiz', totalCopies: 1, availableCopies: 1 }
-];
+// ==================== ENDPOINTS DE LIBROS ====================
 
-let loans = [];
-let nextLoanId = 1;
-
-// Listar libros
-app.get('/books', (req, res) => {
-  res.json(books);
+// Listar todos los libros
+app.get('/books', async (req, res) => {
+  try {
+    const books = await BookModel.getAllBooks();
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener libros', details: err.message });
+  }
 });
 
-// Obtener libro por id
-app.get('/books/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const book = books.find(b => b.id === id);
-  if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
-  res.json(book);
+// Obtener libro por ID
+app.get('/books/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const book = await BookModel.getBookById(id);
+    if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
+    res.json(book);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener libro', details: err.message });
+  }
 });
 
-// Crear préstamo
-app.post('/loans', (req, res) => {
-  const { bookId, borrower } = req.body;
-  if (!bookId || !borrower) return res.status(400).json({ error: 'Falta bookId o borrower' });
-  const book = books.find(b => b.id === Number(bookId));
-  if (!book) return res.status(404).json({ error: 'Libro no encontrado' });
-  if (book.availableCopies <= 0) return res.status(400).json({ error: 'No hay copias disponibles' });
-  // no se cumple la primer restriccion simmplemente crea el prestamo, no se valida si el usuario ya tiene prestamos.
-  const loan = {
-    id: nextLoanId++,
-    bookId: book.id,
-    borrower,
-    loanDate: new Date().toISOString(),
-    returned: false,
-    returnDate: null
-  };
-  loans.push(loan);
-  book.availableCopies -= 1;
-  res.status(201).json(loan);
+// Crear nuevo libro (endpoint adicional para administración)
+app.post('/books', async (req, res) => {
+  try {
+    const { title, author, totalCopies } = req.body;
+    if (!title || !author) {
+      return res.status(400).json({ error: 'Falta title o author' });
+    }
+    const bookId = await BookModel.createBook(title, author, totalCopies || 1);
+    const book = await BookModel.getBookById(bookId);
+    res.status(201).json(book);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear libro', details: err.message });
+  }
+});
+
+// ==================== ENDPOINTS DE PRÉSTAMOS ====================
+
+// Listar todos los préstamos
+app.get('/loans', async (req, res) => {
+  try {
+    const loans = await LoanModel.getAllLoans();
+    res.json(loans);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener préstamos', details: err.message });
+  }
+});
+
+// Listar préstamos activos
+app.get('/loans/active', async (req, res) => {
+  try {
+    const loans = await LoanModel.getActiveLoans();
+    res.json(loans);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener préstamos activos', details: err.message });
+  }
+});
+
+// Crear nuevo préstamo
+app.post('/loans', async (req, res) => {
+  try {
+    const { bookId, borrower } = req.body;
+
+    // Validaciones
+    if (!bookId || !borrower) {
+      return res.status(400).json({ error: 'Falta bookId o borrower' });
+    }
+
+    // Verificar que el libro existe
+    const book = await BookModel.getBookById(Number(bookId));
+    if (!book) {
+      return res.status(404).json({ error: 'Libro no encontrado' });
+    }
+
+    // Verificar que hay copias disponibles
+    if (book.availableCopies <= 0) {
+      return res.status(400).json({ error: 'No hay copias disponibles' });
+    }
+
+    // Crear préstamo
+    const loanId = await LoanModel.createLoan(book.id, borrower);
+    
+    // Decrementar copias disponibles
+    await BookModel.decrementCopies(book.id);
+
+    // Retornar el préstamo creado
+    const loan = await LoanModel.getLoanById(loanId);
+    res.status(201).json(loan);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear préstamo', details: err.message });
+  }
 });
 
 // Devolver libro
-app.post('/returns/:loanId', (req, res) => {
-  const loanId = Number(req.params.loanId);
-  const loan = loans.find(l => l.id === loanId);
-  if (!loan) return res.status(404).json({ error: 'Préstamo no encontrado' });
-  if (loan.returned) return res.status(400).json({ error: 'Préstamo ya fue devuelto' });
+app.post('/returns/:loanId', async (req, res) => {
+  try {
+    const loanId = Number(req.params.loanId);
+    
+    // Obtener préstamo
+    const loan = await LoanModel.getLoanById(loanId);
+    if (!loan) {
+      return res.status(404).json({ error: 'Préstamo no encontrado' });
+    }
 
-  loan.returned = true;
-  loan.returnDate = new Date().toISOString();
-  const book = books.find(b => b.id === loan.bookId);
-  if (book) book.availableCopies += 1;
-  res.json(loan);
+    // Verificar que no fue devuelto ya
+    if (loan.returned) {
+      return res.status(400).json({ error: 'Préstamo ya fue devuelto' });
+    }
+
+    // Marcar como devuelto
+    await LoanModel.markAsReturned(loanId);
+    
+    // Incrementar copias disponibles
+    await BookModel.incrementCopies(loan.bookId);
+
+    // Retornar préstamo actualizado
+    const updatedLoan = await LoanModel.getLoanById(loanId);
+    res.json(updatedLoan);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al devolver préstamo', details: err.message });
+  }
 });
 
-// Listar préstamos vigentes
-app.get('/loans/active', (req, res) => {
-  const active = loans.filter(l => !l.returned).map(l => ({
-    ...l,
-    book: books.find(b => b.id === l.bookId) || null
-  }));
-  res.json(active);
-});
-
-// Listar todos los préstamos
-app.get('/loans', (req, res) => {
-  const all = loans.map(l => ({
-    ...l,
-    book: books.find(b => b.id === l.bookId) || null
-  }));
-  res.json(all);
-});
+// ==================== INICIALIZACIÓN ====================
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Biblioteca API escuchando en puerto ${PORT}`));
+
+// Inicializar BD y luego iniciar servidor
+initSchema()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`\n✓ Biblioteca API escuchando en puerto ${PORT}`);
+      console.log(`✓ Endpoints disponibles:`);
+      console.log(`  GET    /books`);
+      console.log(`  GET    /books/:id`);
+      console.log(`  POST   /books`);
+      console.log(`  GET    /loans`);
+      console.log(`  GET    /loans/active`);
+      console.log(`  POST   /loans`);
+      console.log(`  POST   /returns/:loanId\n`);
+    });
+  })
+  .catch(err => {
+    console.error('Error inicializando BD:', err);
+    process.exit(1);
+  });
