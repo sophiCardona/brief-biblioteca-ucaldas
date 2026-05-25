@@ -95,4 +95,9 @@ router.get("/solicitudes", asyncHandler((_, res) => {
   res.status(200).json(service.listSolicitudes());
 }));
 
+// Endpoint de diagnóstico
+router.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", message: "API funcionando", timestamp: new Date().toISOString() });
+});
+
 export { router, store };
