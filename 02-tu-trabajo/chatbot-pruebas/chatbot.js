@@ -3,7 +3,7 @@ const { execSync } = require("child_process");
 
 const BASE_URL = "http://localhost:3001";
 const OLLAMA_URL = "http://localhost:11434/api/chat";
-const MODELO = "qwen3.6-coder:7b"; 
+const MODELO = "qwen3.6:latest"; 
 
 const SYSTEM_PROMPT = `
 Eres un asistente de QA especializado en probar una API REST de biblioteca universitaria.
