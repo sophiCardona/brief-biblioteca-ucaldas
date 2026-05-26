@@ -2,7 +2,7 @@
 
 # Plantilla — Registro de Prompts
 
-## Prompt #1
+## Prompt #5
 
 **Fecha y hora:** 2026-05-19 14:30
 

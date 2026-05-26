@@ -1,6 +1,6 @@
-# /02-tu-trabajo/prompts/tabla-comparativa.md
+# /02-tu-trabajo/prompts/tabla-comparativa-v2.md
 
-## Prompt #5
+## Prompt #7
 
 **Fecha y hora:** 2026-05-24 21:49
 
