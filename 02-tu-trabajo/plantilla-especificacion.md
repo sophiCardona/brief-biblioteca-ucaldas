@@ -1,6 +1,6 @@
 # Especificación Formal — Sistema de Préstamo de Libros
 
-> **Autor:** Mauricio y Sophia
+> **Autor:** Mauricio Gonzáles- Sophia Cardona 
 > **Fecha:** 5 de mayo de 2026
 > **Versión:** 1.0
 > **Brief de origen:** Correo de Diana Restrepo, Coordinadora de Biblioteca

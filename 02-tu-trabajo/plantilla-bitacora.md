@@ -11,6 +11,7 @@
 - **Archivos generados por la IA:** 
 
 Version1 
+<<<<<<< HEAD
 package.json (con Express como dependencia) 
 src/index.js (servidor Express con 6 endpoints principales)
 README.md (con instrucciones de instalación y ejemplos curl).]
@@ -29,6 +30,25 @@ Raíz:
 
 src/infrastructure:
 - src/infrastructure/memory/store.ts
+=======
+[package.json (con Express como dependencia), src/index.js (servidor Express con 6 endpoints principales), y README.md (con instrucciones de instalación y ejemplos curl).]
+
+Version2 
+Raíz:
+package.json
+tsconfig.json
+.gitignore
+.env
+
+src/core:
+src/core/entities.ts
+src/core/errors.ts
+src/core/services/libraryService.ts
+
+src/infrastructure:
+
+src/infrastructure/memory/store.ts
+>>>>>>> bitacora
 
 src/interfaces/http:
 
