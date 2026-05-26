@@ -459,8 +459,25 @@ Despues de correr todas las pruebas, responde en tu `bitacora.md`:
 
 1. ¿Cuantas reglas de negocio implemento correctamente tu version sin IA? ¿Y la version con IA?
 
+Version 1: 
+- Implementó 7 reglas bien, con algunos errores en la respuesta HTTP. 
+
+Version 2:
+- Implementó 12 reglas bien, con dos errores tambien en HTTP. 
+
 2. ¿Hubo alguna prueba donde la version sin IA devolvio `200 OK` cuando debia devolver `409` o `404`? ¿Que implica eso para un cliente que consume la API?
+- Hubieron varias pruebas con estado 200 OK, como permitir 6 ibros prestados a un estudiante de posgrado, permite prestamos con estado vencidos, o a estudiantes que tienen multa, y si no existe el estudiante, de igual manera crea el préstamo. 
+Para un cliente que consume la API, esto implica una vulnerabilidad crítica y pérdida total de confianza en el sistema: la API corromperá la base de datos al registrar información falsa (como préstamos a usuarios "fantasma"), romperá la experiencia de usuario al permitir acciones prohibidas que luego fallarán de forma impredecible en la interfaz, y dejará la puerta abierta a que usuarios maliciosos se salten los límites del negocio (usando herramientas externas como Postman) para sabotear el inventario de la biblioteca, ya que el servidor no actúa como un escudo de seguridad.
 
 3. ¿Hay alguna regla de negocio que **ninguna** de las dos versiones implemento? Si es asi, ¿como lo detectaste?
+- La RN2 que no se cumple completamente en la version 1 (Sin IA), y se cumple parcialmente en la version 2 (con IA), pues esta version si tiene PUT pero no aplica en la devolucion que la fecha se actualice aaplicando la regla 3/15 por tipo de libro. 
+
+Como se detectó: 
+- Se extrae y si analilza la condicion del doc de especificacion. 
+- Se busca en la version 1 como se palica la regla 
+- Se busca en version 2 como se plaica esta regla. 
+- Se analiza la implementacion segun la restriccion dada en un principio y se sacan conlcusiones. 
 
 4. Para las pruebas RN3, RN4 y RN7: si no pudiste ejecutarlas porque tu API no permite manipular fechas ni tiene lista de espera, ¿que dice eso sobre la completitud del sistema? ¿Deberia la especificacion haber contemplado esto?
+
+- Que no se puedan ejecutar estas pruebas demuestra que el sistema está incompleto y desconectado de las reglas de negocio reales, ya que una API de préstamos sin control de fechas ni lista de espera es inoperable en el mundo real. Definitivamente, la especificación debió haber contemplado estos escenarios desde el inicio, puesto que los requerimientos no funcionales (como la manipulación del tiempo para pruebas) y las reglas críticas de negocio (como la saturación de solicitudes) son pilares fundamentales que el arquitecto o diseñador del software debió plasmar en el documento técnico para guiar correctamente el desarrollo y evitar un sistema deficiente.
