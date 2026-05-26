@@ -429,6 +429,26 @@ Llena esta tabla con lo que observaste al correr cada prueba en ambas versiones.
 | VAL-3 ejemplar inexistente     | —     | 404             | 404           | {"error":"Libro no encontrado"} |
 | VAL-4 tipo incorrecto          | —     | 400             | 404           | {"error":"Libro no encontrado"} |
 
+## Tabla comparativa de resultados Con IA
+
+Llena esta tabla con lo que observaste al correr cada prueba en la version con IA. Pegala en tu `bitacora.md`.
+
+| Prueba                         | Regla | Esperado        | Con IA — HTTP  | Con IA — body util |
+|--------------------------------|-------|-----------------|----------------|--------------------|
+| RN1-B cuarto prestamo pregrado | RN1   | 409             | 409 Conflict   | {"error":"limite_prestamos_alcanzado","limite":3,"actuales":3} |
+| RN2-B sexto prestamo posgrado  | RN2   | 409             | 409 Conflict   | {"error":"limite_prestamos_alcanzado","limite":5,"actuales":5} |
+| RN5-B ejemplar ya prestado     | RN5   | 409             | 409 Conflict   | {"error":"Ejemplar no disponible"} |
+| RN6-A plazo libro normal       | RN6   | fecha + 15 dias | 201 Created    | {"fechaDevolucionEsperada":"+15 dias","estado":"activo"} |
+| RN6-B plazo alta demanda       | RN6   | fecha + 3 dias  | 201 Created    | {"fechaDevolucionEsperada":"+3 dias","estado":"activo"} |
+| RN3 prestamo con vencido       | RN3   | 409             | 409 Conflict   | {"error":"prestamo_vencidos_o_multas_pendientes"} |
+| RN4-B prestamo con multa       | RN4   | 409             | 409 Conflict   | {"error":"prestamo_vencidos_o_multas_pendientes"} |
+| RN8 calculo de multa           | RN8   | N x 2000        | 200 OK         | {"devolucion":{"multaId":"multa-P40"},"multa":{"diasRetraso":2,"valor":4000}} |
+| VAL-1 body vacio               | —     | 400             | 400 Bad Request | {"error":"Campo requerido: id"} |
+| VAL-2 estudiante inexistente   | —     | 404             | 400 Bad Request | {"error":"Campo requerido: id"} |
+| VAL-3 ejemplar inexistente     | —     | 404             | 400 Bad Request | {"error":"Campo requerido: id"} |
+| VAL-4 tipo incorrecto          | —     | 400             | 400 Bad Request | {"error":"Campo requerido: id"} |
+
+
 **Columna "body util":** escribe `Si` si la respuesta incluye un mensaje que explica por que fallo, o `No` si solo devuelve el codigo sin explicacion.
 
 ---

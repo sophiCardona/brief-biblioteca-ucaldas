@@ -15,10 +15,18 @@ export class SqliteStore {
   private readonly db: Database.Database;
 
   public constructor(dbPath: string = process.env.BIBLIOTECA_DB_PATH ?? path.join(process.cwd(), "data", "biblioteca.sqlite")) {
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-    this.db = new Database(dbPath);
-    this.db.pragma("foreign_keys = ON");
-    this.initializeSchema();
+    try {
+      console.log(`[SQLite] Inicializando BD en: ${dbPath}`);
+      fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+      this.db = new Database(dbPath);
+      console.log(`[SQLite] Conexión exitosa`);
+      this.db.pragma("foreign_keys = ON");
+      this.initializeSchema();
+      console.log(`[SQLite] Schema creado exitosamente`);
+    } catch (error) {
+      console.error(`[SQLite] Error al inicializar BD:`, error);
+      throw error;
+    }
   }
 
   private initializeSchema(): void {
@@ -108,8 +116,8 @@ export class SqliteStore {
   public insertLibro(libro: Libro): void {
     this.db.prepare(
       `INSERT INTO libros (id, titulo, autor, ubicacion_sala, tipo)
-       VALUES (@id, @titulo, @autor, @ubicacionSala, @tipo)`
-    ).run(libro);
+       VALUES (?, ?, ?, ?, ?)`
+    ).run(libro.id, libro.titulo, libro.autor, libro.ubicacionSala, libro.tipo);
   }
 
   public listLibros(): Libro[] {
@@ -157,10 +165,17 @@ export class SqliteStore {
   }
 
   public insertEstudiante(estudiante: Estudiante): void {
-    this.db.prepare(
-      `INSERT INTO estudiantes (id, prog_academico, semestre, tipo)
-       VALUES (@id, @progAcademico, @semestre, @tipo)`
-    ).run(estudiante);
+    try {
+      console.log("[SQLite] insertEstudiante recibió:", estudiante);
+      this.db.prepare(
+        `INSERT INTO estudiantes (id, prog_academico, semestre, tipo)
+         VALUES (?, ?, ?, ?)`
+      ).run(estudiante.id, estudiante.progAcademico, estudiante.semestre, estudiante.tipo);
+      console.log("[SQLite] insertEstudiante exitoso para id:", estudiante.id);
+    } catch (error) {
+      console.error("[SQLite] insertEstudiante error:", error);
+      throw error;
+    }
   }
 
   public listEstudiantes(): Estudiante[] {
@@ -178,11 +193,11 @@ export class SqliteStore {
   public updateEstudiante(estudiante: Estudiante): void {
     this.db.prepare(
       `UPDATE estudiantes
-       SET prog_academico = @progAcademico,
-           semestre = @semestre,
-           tipo = @tipo
-       WHERE id = @id`
-    ).run(estudiante);
+       SET prog_academico = ?,
+           semestre = ?,
+           tipo = ?
+       WHERE id = ?`
+    ).run(estudiante.progAcademico, estudiante.semestre, estudiante.tipo, estudiante.id);
   }
 
   public deleteEstudiante(id: string): void {
@@ -203,8 +218,8 @@ export class SqliteStore {
         fecha_devolucion_esperada,
         fecha_devolucion_real,
         estado
-      ) VALUES (@id, @estudianteId, @ejemplarId, @fechaPrestamo, @fechaDevolucionEsperada, @fechaDevolucionReal, @estado)`
-    ).run(prestamo);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(prestamo.id, prestamo.estudianteId, prestamo.ejemplarId, prestamo.fechaPrestamo, prestamo.fechaDevolucionEsperada, prestamo.fechaDevolucionReal, prestamo.estado);
   }
 
   public listPrestamos(): Prestamo[] {
@@ -240,14 +255,14 @@ export class SqliteStore {
   public updatePrestamo(prestamo: Prestamo): void {
     this.db.prepare(
       `UPDATE prestamos
-       SET estudiante_id = @estudianteId,
-           ejemplar_id = @ejemplarId,
-           fecha_prestamo = @fechaPrestamo,
-           fecha_devolucion_esperada = @fechaDevolucionEsperada,
-           fecha_devolucion_real = @fechaDevolucionReal,
-           estado = @estado
-       WHERE id = @id`
-    ).run(prestamo);
+       SET estudiante_id = ?,
+           ejemplar_id = ?,
+           fecha_prestamo = ?,
+           fecha_devolucion_esperada = ?,
+           fecha_devolucion_real = ?,
+           estado = ?
+       WHERE id = ?`
+    ).run(prestamo.estudianteId, prestamo.ejemplarId, prestamo.fechaPrestamo, prestamo.fechaDevolucionEsperada, prestamo.fechaDevolucionReal, prestamo.estado, prestamo.id);
   }
 
   public deletePrestamo(id: string): void {
@@ -268,8 +283,8 @@ export class SqliteStore {
         fecha_devolucion_real,
         dias_retraso,
         valor
-      ) VALUES (@id, @estudianteId, @historialId, @fechaDevolucionEsperada, @fechaDevolucionReal, @diasRetraso, @valor)`
-    ).run(multa);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(multa.id, multa.estudianteId, multa.historialId, multa.fechaDevolucionEsperada, multa.fechaDevolucionReal, multa.diasRetraso, multa.valor);
   }
 
   public hasSolicitudByPair(estudianteId: string, prestamoId: string): boolean {
@@ -304,8 +319,8 @@ export class SqliteStore {
   public insertDevolucion(devolucion: Devolucion): void {
     this.db.prepare(
       `INSERT INTO devoluciones (id, prestamo_id, fecha_devolucion, multa_id)
-       VALUES (@id, @prestamoId, @fechaDevolucion, @multaId)`
-    ).run(devolucion);
+       VALUES (?, ?, ?, ?)`
+    ).run(devolucion.id, devolucion.prestamoId, devolucion.fechaDevolucion, devolucion.multaId);
   }
 
   public getDevolucion(id: string): Devolucion | undefined {

@@ -171,14 +171,20 @@ Ambas devuelven JSON con un mensaje claro en este caso, pero v2 es más consiste
 
 4. ¿Qué pasa en v1 si `ejemplarId` llega como string en lugar de número? ¿Y en v2?
 
-Version 1: para esta version como no tenemos la entidad ejemplarId, se pone bookid como numero en lugar de string. 
+Version 1: para esta version como no tenemos la entidad ejemplarId, se pone bookid como numero en lugar de string.
+
 Codigo HTTP: 201 Created
+
 Cuerpo: {"id":1,"bookId":1,"borrower":"Ana","loanDate":"2026-05-17T18:49:11.781Z","returned":false,"returnDate":null}
+
 Acepta ambos casos sin validaciones.
 
 Version 2: En este caso, ejemplar Id, ya estaba predeterminado como string, por tanto se probará el contrario, que pasa si llega como número. 
+
 Codigo HTTP: 400 Bad Request
+
 Cuerpo: {"error":"Campo requerido: ejemplar_id"}
+
 No pasa la validacion ya que "assertRequiredString" verifica estrictamente que sea string. 
 
 ### Ejercicio 2.2 — Comparar errores de dominio
