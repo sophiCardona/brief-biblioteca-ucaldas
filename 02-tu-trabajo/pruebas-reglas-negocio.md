@@ -410,6 +410,7 @@ curl -s $BASE_CON_IA/api/estudiantes/NO-EXISTE-999/historial | jq
 
 ---
 
+
 | Prueba                         | Regla | Esperado        | Sin IA — HTTP | Sin IA — body util |
 |--------------------------------|-------|-----------------|---------------|--------------------|
 | RN1-B cuarto prestamo pregrado | RN1   | 409             | 400           | {"error":"No hay copias disponibles"} |
