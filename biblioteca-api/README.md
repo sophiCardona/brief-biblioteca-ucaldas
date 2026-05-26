@@ -27,6 +27,11 @@ API endpoints principales:
 - `GET /loans/active` — listar préstamos vigentes
 - `GET /loans` — listar todos los préstamos
 
+## Endpoints Pendientes de Implementación
+
+- `POST /api/estudiantes` — registrar estudiante (body JSON: `{ "id": "EST-PRE-01", "nombre": "Ana Lopez", "programa": "Ingenieria de Sistemas", "semestre": 5, "tipo": "pregrado" }`)
+- `POST /api/libros` — registrar libro (body JSON: `{ "id": 1, "titulo": "Introducción a los Algoritmos", "autor": "Thomas H. Cormen", "isbn": "978-0262033848", "altaDemanda": true }`)
+
 Ejemplos curl:
 
 ```bash
@@ -41,4 +46,10 @@ curl http://localhost:3000/loans/active
 
 # Devolver préstamo (reemplazar 1 por el id recibido)
 curl -X POST http://localhost:3000/returns/1
+
+# Registrar estudiante (endpoint pendiente)
+curl -X POST http://localhost:3000/api/estudiantes -H "Content-Type: application/json" -d '{"id":"EST-PRE-01","nombre":"Ana Lopez","programa":"Ingenieria de Sistemas","semestre":5,"tipo":"pregrado"}'
+
+# Registrar libro (endpoint pendiente)
+curl -X POST http://localhost:3000/api/libros -H "Content-Type: application/json" -d '{"id":1,"titulo":"Introducción a los Algoritmos","autor":"Thomas H. Cormen","isbn":"978-0262033848","altaDemanda":true}'
 ```
