@@ -35,20 +35,45 @@ export class LibraryService {
     return next;
   }
 
+  private normalizeDate(date: Date): Date {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }
+
+  private calculateExpectedReturnDate(prestamo: Prestamo): Date {
+    const ejemplar = this.store.getEjemplar(prestamo.ejemplarId);
+    const libro = ejemplar ? this.store.getLibro(ejemplar.idLibro) : undefined;
+
+    if (libro) {
+      const fechaPrestamo = this.parseDate(prestamo.fechaPrestamo, "fechaPrestamo");
+      const days = libro.tipo === "alta_demanda" ? 3 : 15;
+      return this.addDays(fechaPrestamo, days);
+    }
+
+    return new Date(prestamo.fechaDevolucionEsperada);
+  }
+
   private refreshLoanStatuses(referenceDate: Date = new Date()): void {
+    const currentDay = this.normalizeDate(referenceDate);
+
     this.store.listPrestamos().forEach((prestamo) => {
-      if (prestamo.estado === "devuelto") {
+      if (prestamo.fechaDevolucionReal !== null || prestamo.estado === "devuelto") {
         return;
       }
 
-      const expectedDate = new Date(prestamo.fechaDevolucionEsperada);
-      const nextState: Prestamo["estado"] = referenceDate > expectedDate ? "vencido" : "activo";
+      const expectedDate = this.normalizeDate(this.calculateExpectedReturnDate(prestamo));
+      const nextState: Prestamo["estado"] = currentDay > expectedDate ? "vencido" : "activo";
 
       if (prestamo.estado !== nextState) {
         prestamo.estado = nextState;
         this.store.updatePrestamo(prestamo);
       }
     });
+  }
+
+  public refreshLoanStatusesDaily(): void {
+    this.refreshLoanStatuses(new Date());
   }
 
   private assertRequiredString(value: unknown, fieldName: string): string {
@@ -132,6 +157,10 @@ export class LibraryService {
 
   public listEjemplaresByLibro(idLibro: string): Ejemplar[] {
     return this.store.listEjemplaresByLibro(idLibro);
+  }
+
+  public listEjemplares(): Ejemplar[] {
+    return this.store.listEjemplares();
   }
 
   public createEstudiante(input: Record<string, unknown>): Estudiante {

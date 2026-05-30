@@ -150,6 +150,12 @@ export class SqliteStore {
     this.db.prepare("INSERT INTO ejemplares (id, id_libro) VALUES (?, ?)").run(ejemplar.id, ejemplar.idLibro);
   }
 
+  public listEjemplares(): Ejemplar[] {
+    return this.db.prepare(
+      "SELECT id, id_libro AS idLibro FROM ejemplares ORDER BY id"
+    ).all() as Ejemplar[];
+  }
+
   public listEjemplaresByLibro(idLibro: string): Ejemplar[] {
     return this.db.prepare(
       "SELECT id, id_libro AS idLibro FROM ejemplares WHERE id_libro = ? ORDER BY id"

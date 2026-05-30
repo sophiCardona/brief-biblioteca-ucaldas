@@ -3,7 +3,7 @@ const { execSync } = require("child_process");
 
 const BASE_URL = "http://localhost:3001";
 const OLLAMA_URL = "http://localhost:11434/api/chat";
-const MODELO = "qwen3.6:latest"; 
+const MODELO = "qwen2.5-coder"; 
 
 const SYSTEM_PROMPT = `
 Eres un asistente de QA especializado en probar una API REST de biblioteca universitaria.
@@ -50,6 +50,32 @@ ENDPOINTS CONOCIDOS:
 - GET    /devoluciones/:id                    Detalles de devolución
 - POST   /solicitudes                         Crear Solicitud
 - GET    /solicitudes                       Listar Solicitudes
+
+EJEMPLO DE COMANDO CURL PARA CREAR LAS ENTIDADES DE PRUEBA BASE:
+# Crear libro
+curl -X POST http://localhost:3001/libros -H "Content-Type: application/json" -d '{"id":"L001","titulo":"Algoritmos","autor":"Knuth","ubicacion_sala":"Sala A","tipo":"normal"}'
+# Crear libro de alta demanda
+curl -X POST http://localhost:3001/libros -H "Content-Type: application/json" -d '{"id":"L002","titulo":"Estructuras de Datos","autor":"Weiss","ubicacion_sala":"Sala B","tipo":"alta demanda"}'
+# Crear estudiante de pregrado
+curl -X POST http://localhost:3001/estudiantes -H "Content-Type: application/json" -d '{"id":"EST001","progAcademico":"Ingeniería","semestre":3,"tipo":"pregrado"}'
+
+# Crear estudiante de posgrado
+curl -X POST http://localhost:3001/estudiantes -H "Content-Type: application/json" -d '{"id":"EST002","progAcademico":"Maestría","semestre":1,"tipo":"posgrado"}'
+
+# Crear ejemplar
+curl -X POST http://localhost:3001/ejemplares -H "Content-Type: application/json" -d '{"id":"EJ001","idLibro":"L001"}'
+
+# Listar todos los ejemplares (NUEVO ENDPOINT)
+curl -X GET http://localhost:3001/ejemplares -H "Content-Type: application/json"
+
+# Crear préstamo
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES001","estudiante_id":"EST001","ejemplar_id":"EJ001","fecha_prestamo":"2026-05-20T00:00:00.000Z"}'
+
+# Registrar devolución
+curl -X POST http://localhost:3001/devoluciones -H "Content-Type: application/json" -d '{"id":"DEV001","prestamo_id":"PRES001","fecha_devolucion":"2026-06-01T00:00:00.000Z"}'
+
+# Crear solicitud
+curl -X POST http://localhost:3001/solicitudes -H "Content-Type: application/json" -d '{"estudiante_id":"EST001","prestamo_id":"PRES002"}'
 
 
 INSTRUCCIONES DE COMPORTAMIENTO:

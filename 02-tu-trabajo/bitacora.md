@@ -194,3 +194,210 @@ Version 2
 ¿Hubo algún momento en que la IA "dijo que terminó" pero al verificar tú descubriste que no? Descríbelo.
 
 [Tu respuesta]
+
+## Chatbot Ollama — Registro
+
+### Modelo usado
+- Nombre: qwen2.5-coder:7b (o el que usaste)
+- RAM consumida aproximada: 10 GB
+
+### Preguntas útiles que generó el chatbot
+| Pregunta que hice |
+|-------------------|
+|1#: Crea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplarcrea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplar            |
+|-------------------|
+|2# genera la prueba RN1 completa: crear los 3 préstamos válidos para pregrado y luego intentar el cuarto|
+ Qué generó el chatbot |
+1# Primero, necesitamos crear el estudiante pregrado y uno de postgrado.
+
+### Datos de Prueba:
+
+1. **Estudiante Pregrado**
+   - ID: `EST-PRE-01`
+   - Nombre: Juan Pérez
+   - Tipo de Estudiante: Pregrado
+
+2. **Estudiante Posgrado**
+   - ID: `EST-POS-01`
+   - Nombre: Ana Rodríguez
+   - Tipo de Estudiante: Posgrado
+
+3. **Libro Normal**
+   - ID: `LIB-001`
+   - Título: "Introducción a la Programación"
+   - Autor: John Doe
+   - Tipo: Libro normal
+
+4. **Libro de Alta Demanda**
+   - ID: `LIB-002`
+   - Título: "Teoría de los Juegos"
+   - Autor: John Nash
+   - Tipo: Libro de alta demanda
+
+### Creación de Estudiantes y Libros:
+
+**Crear Estudiante Pregrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-PRE-01",
+  "nombre": "Juan Pérez",
+  "tipoEstudiante": "Pregrado"
+}'
+```
+
+**Crear Estudiante Posgrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-POS-01",
+  "nombre": "Ana Rodríguez",
+  "tipoEstudiante": "Posgrado"
+}'
+```
+
+**Crear Libro Normal (LIB-001):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-001",
+  "titulo": "Introducción a la Programación",
+  "autor": "John Doe",
+  "tipo": "Normal"
+}'
+```
+
+**Crear Libro de Alta Demanda (LIB-002):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-002",
+  "titulo": "Teoría de los Juegos",
+  "autor": "John Nash",
+  "tipo": "AltaDemanda"
+}'
+```
+
+**Crear Ejemplares para LIB-001 (6 ejemplares):**
+
+```bash
+for i in {1..6}; do
+  curl -X POST http://localhost:3001/ejemplares \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "EJ-001-'$i'",
+    "libroId": "LIB-001",
+    "disponible": true
+  }'
+done
+```
+
+**Crear Ejemplar para LIB-002 (1 ejemplar):**
+
+```bash
+curl -X POST http://localhost:3001/ejemplares \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EJ-002",
+  "libroId": "LIB-002",
+  "disponible": true
+}'
+```
+
+**Verificar Datos de Prueba Creados:**
+
+- Listar estudiantes: `GET /estudiantes`
+- Listar libros y ejemplares: `GET /libros` y `GET /ejemplares/libro/:id_libro`
+
+Estos datos de prueba te permitirán probar todas las reglas que mencionaste.
+
+2# Chatbot: ### Prueba de RN1 (Un estudiante de pregrado no puede tener más de 3 préstamos activos)
+
+Primero, necesitamos crear tres préstamos válidos para el estudiante `EST-PRE-01` con libros disponibles y luego intentar crear un cuarto préstamo.
+
+#### 1. Crear el primer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-1"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 2. Crear el segundo préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-2"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 3. Crear el tercer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-3"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 4. Intentar crear el cuarto préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
+
+**Esperado:** Código HTTP `409 Conflict`.
+
+### EJECUTAR:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
+
+Si el estudiante `EST-PRE-01` intenta crear un cuarto préstamo, debería recibir un error `409 Conflict` porque ha alcanzado su límite de préstamos activos (3)
+| ¿Fue útil? |
+1# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.
+2# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.
+### Limitaciones observadas
+- ¿El chatbot inventó endpoints que no existen?
+  NO, pero si inventó la estructura de los datos que se le deben enviar a los endpoints, lo que hace que no pueda crear los datos de prueba.
+- ¿Confundió reglas entre sí?
+  NO, las reglas las tiene claras
+- ¿Tuvo que corregirle algo?
+  SI, la estructura de los datos que se le deben enviar a los endpoints, por esos añadi pruebas al chat para que entendiera como es la estructura de los datos.
+
+### Comparación: chatbot local vs ChatGPT/Claude en la nube
+- ¿Qué diferencias notaste en la calidad de las respuestas?
+- ¿Qué ventajas tiene correrlo localmente?

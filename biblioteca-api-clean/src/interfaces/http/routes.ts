@@ -31,6 +31,10 @@ router.post("/ejemplares", asyncHandler((req, res) => {
   res.status(201).json(service.createEjemplar(req.body));
 }));
 
+router.get("/ejemplares", asyncHandler((_, res) => {
+  res.status(200).json(service.listEjemplares());
+}));
+
 router.get("/ejemplares/libro/:id_libro", asyncHandler((req, res) => {
   res.status(200).json(service.listEjemplaresByLibro(req.params.id_libro));
 }));
@@ -100,4 +104,4 @@ router.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok", message: "API funcionando", timestamp: new Date().toISOString() });
 });
 
-export { router, store };
+export { router, store, service };
