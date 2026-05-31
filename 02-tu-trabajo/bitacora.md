@@ -194,3 +194,386 @@ Version 2
 ¿Hubo algún momento en que la IA "dijo que terminó" pero al verificar tú descubriste que no? Descríbelo.
 
 [Tu respuesta]
+
+## Chatbot Ollama — Registro
+
+### Modelo usado
+- Nombre: qwen2.5-coder:7b (o el que usaste)
+- RAM consumida aproximada: 10 GB
+
+### Preguntas útiles que generó el chatbot
+| Pregunta que hice |
+|-------------------|
+|1#: Crea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplarcrea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplar            |
+|-------------------|
+|2# genera la prueba RN1 completa: crear los 3 préstamos válidos para pregrado y luego intentar el cuarto|
+|-------------------|
+|3# ahora haz lo mismo para RN2 con el estudiante de posgrado, recuerda que su límite es 5|
+|-------------------|
+|4# prueba que un ejemplar ya prestado no se puede prestar de nuevo (RN5)|
+|-------------------|
+|5# prueba que el plazo del préstamo es correcto para un libro normal versus uno de alta demanda (RN6)|
+|-------------------|
+|6# genera pruebas de entradas inválidas: body vacío, estudiante inexistente y ejemplar inexistente|
+|-------------------|
+|7# el resultado del body vacío fue { "error": "..." } con código 400. ¿Eso es correcto según la especificación?|
+|-------------------|
+| Qué generó el chatbot |
+|1# Primero, necesitamos crear el estudiante pregrado y uno de postgrado.
+
+### Datos de Prueba:
+
+1. **Estudiante Pregrado**
+   - ID: `EST-PRE-01`
+   - Nombre: Juan Pérez
+   - Tipo de Estudiante: Pregrado
+
+2. **Estudiante Posgrado**
+   - ID: `EST-POS-01`
+   - Nombre: Ana Rodríguez
+   - Tipo de Estudiante: Posgrado
+
+3. **Libro Normal**
+   - ID: `LIB-001`
+   - Título: "Introducción a la Programación"
+   - Autor: John Doe
+   - Tipo: Libro normal
+
+4. **Libro de Alta Demanda**
+   - ID: `LIB-002`
+   - Título: "Teoría de los Juegos"
+   - Autor: John Nash
+   - Tipo: Libro de alta demanda
+
+### Creación de Estudiantes y Libros:
+
+**Crear Estudiante Pregrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-PRE-01",
+  "nombre": "Juan Pérez",
+  "tipoEstudiante": "Pregrado"
+}'
+```
+
+**Crear Estudiante Posgrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-POS-01",
+  "nombre": "Ana Rodríguez",
+  "tipoEstudiante": "Posgrado"
+}'
+```
+
+**Crear Libro Normal (LIB-001):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-001",
+  "titulo": "Introducción a la Programación",
+  "autor": "John Doe",
+  "tipo": "Normal"
+}'
+```
+
+**Crear Libro de Alta Demanda (LIB-002):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-002",
+  "titulo": "Teoría de los Juegos",
+  "autor": "John Nash",
+  "tipo": "AltaDemanda"
+}'
+```
+
+**Crear Ejemplares para LIB-001 (6 ejemplares):**
+
+```bash
+for i in {1..6}; do
+  curl -X POST http://localhost:3001/ejemplares \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "EJ-001-'$i'",
+    "libroId": "LIB-001",
+    "disponible": true
+  }'
+done
+```
+
+**Crear Ejemplar para LIB-002 (1 ejemplar):**
+
+```bash
+curl -X POST http://localhost:3001/ejemplares \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EJ-002",
+  "libroId": "LIB-002",
+  "disponible": true
+}'
+```
+
+**Verificar Datos de Prueba Creados:**
+
+- Listar estudiantes: `GET /estudiantes`
+- Listar libros y ejemplares: `GET /libros` y `GET /ejemplares/libro/:id_libro`
+
+Estos datos de prueba te permitirán probar todas las reglas que mencionaste.|
+|-------------------|
+|2# Chatbot: ### Prueba de RN1 (Un estudiante de pregrado no puede tener más de 3 préstamos activos)
+
+Primero, necesitamos crear tres préstamos válidos para el estudiante `EST-PRE-01` con libros disponibles y luego intentar crear un cuarto préstamo.
+
+#### 1. Crear el primer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-1"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 2. Crear el segundo préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-2"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 3. Crear el tercer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-3"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 4. Intentar crear el cuarto préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
+
+**Esperado:** Código HTTP `409 Conflict`.
+
+### EJECUTAR:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
+
+Si el estudiante `EST-PRE-01` intenta crear un cuarto préstamo, debería recibir un error `409 Conflict` porque ha alcanzado su límite de préstamos activos (3)|
+|-------------------|
+|3# Chatbot: Claro, aquí tienes una prueba completa de la regla RN2, que establece que un estudiante de posgrado no puede tener más de 5 préstamos activos:
+
+### Prueba RN2: Crear los 5 préstamos válidos para el estudiante de posgrado y luego intentar el sexto
+
+#### Paso 1: Crear un préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-005","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-24T00:00:00.000Z"}'
+```
+
+#### Paso 2: Crear un segundo préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-006","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-008","fecha_prestamo":"2026-05-25T00:00:00.000Z"}'
+```
+
+#### Paso 3: Crear un tercer préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-007","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-009","fecha_prestamo":"2026-05-26T00:00:00.000Z"}'
+```
+
+#### Paso 4: Crear un cuarto préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-008","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-010","fecha_prestamo":"2026-05-27T00:00:00.000Z"}'
+```
+
+#### Paso 5: Crear un quinto préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-009","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-011","fecha_prestamo":"2026-05-28T00:00:00.000Z"}'
+```
+
+#### Paso 6: Intentar crear el sexto préstamo (debería fallar con conflict)
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-010","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-012","fecha_prestamo":"2026-05-29T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+El último comando (Paso 6) debe devolver un error `409 Conflict` indicando que el estudiante de posgrado ya tiene 5 préstamos activos y no puede tomar más.
+
+Este proceso te permite verificar que la regla RN2 está funcionando correctamente.|
+|-------------------|
+|4# Chatbot: Claro, aquí tienes una prueba completa de la regla RN5, que establece que un ejemplar que ya está prestado no puede prestarse de nuevo:
+
+### Prueba RN5: Intentar prestar un ejemplar que ya está prestado
+
+#### Paso 1: Crear un préstamo válido para el ejemplar
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-011","estudiante_id":"EST-PRE-01","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Paso 2: Intentar crear un nuevo préstamo con el mismo ejemplar (debería fallar)
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-012","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-31T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+El último comando (Paso 2) debe devolver un error `409 Conflict` indicando que el ejemplar ya está prestado y no puede ser prestado de nuevo.
+
+Este proceso te permite verificar que la regla RN5 está funcionando correctamente.|
+|-------------------|
+5# Chatbot: Claro, aquí tienes una prueba completa de la regla RN5, que establece que un ejemplar que ya está prestado no puede prestarse de nuevo:
+
+### Prueba RN5: Intentar prestar un ejemplar que ya está prestado
+
+#### Paso 1: Crear un préstamo válido para el ejemplar
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-011","estudiante_id":"EST-PRE-01","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Paso 2: Intentar crear un nuevo préstamo con el mismo ejemplar (debería fallar)
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-012","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-31T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+El último comando (Paso 2) debe devolver un error `409 Conflict` indicando que el ejemplar ya está prestado y no puede ser prestado de nuevo.
+
+Este proceso te permite verificar que la regla RN5 está funcionando correctamente.
+|-------------------|
+5# Chatbot: Claro, aquí tienes una prueba completa para verificar que el plazo del préstamo es correcto para un libro normal y uno de alta demanda:
+
+### Prueba RN6: Verificar los plazos de préstamo
+
+#### Paso 1: Crear un préstamo con un libro normal
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-013","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-008","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Paso 2: Crear un préstamo con un libro de alta demanda
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-014","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-013","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+El primer comando (Paso 1) debe devolver un `id` de préstamo con una fecha de vencimiento que sea el día 15 de mayo de 2026.
+El segundo comando (Paso 2) debe devolver un `id` de préstamo con una fecha de vencimiento que sea el día 3 de junio de 2026.
+
+Este proceso te permite verificar que la regla RN6 está funcionando correctamente.
+|-------------------|
+6# genera pruebas de entradas inválidas: body vacío, estudiante inexistente y ejemplar inexistente
+
+Chatbot: Claro, aquí tienes pruebas para probar las entradas inválidas como cuerpo vacío, estudiante inexistente y ejemplar inexistente:
+
+### Prueba de entrada inválida: Cuerpo vacío
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{}'
+```
+
+#### Resultado esperado:
+Debería devolver un error `400 Bad Request` indicando que el cuerpo de la solicitud no es válido.
+
+### Prueba de entrada inválida: Estudiante inexistente
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-015","estudiante_id":"EST-PRE-99","ejemplar_id":"EJ-014","fecha_prestamo":"2026-06-01T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+Debería devolver un error `404 Not Found` indicando que el estudiante no existe.
+
+### Prueba de entrada inválida: Ejemplar inexistente
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-016","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-99","fecha_prestamo":"2026-06-01T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+Debería devolver un error `404 Not Found` indicando que el ejemplar no existe.
+
+Estas pruebas te ayudan a verificar que la API maneja correctamente las entradas inválidas y devuelve los errores apropiados.
+
+|-------------------|
+|7# Chatbot: Si el resultado de un cuerpo vacío es `{ "error": "..." }` con un código 400, entonces eso está dentro de lo esperado según la convención de errores HTTP. El código 400 indica que la solicitud tiene problemas con la sintaxis y no puede ser procesada por el servidor.
+
+Aquí tienes una tabla para resumir los códigos de estado y sus significados:
+
+| Código | Descripción                               |
+|--------|-------------------------------------------|
+| 400    | Solicitud incorrecta (Bad Request)        |
+| 404    | Recurso no encontrado (Not Found)         |
+
+Para una solicitud con un cuerpo vacío, el servidor puede devolver un error más específico en el cuerpo de la respuesta para proporcionar información adicional sobre lo que falló. 
+
+Aunque el formato exacto del mensaje de error (`{ "error": "..." }`) es flexible y depende de cómo esté configurado el servidor, lo importante es que:
+- El código de estado sea 400 (Bad Request).
+- El cuerpo contenga un mensaje de error descriptivo.
+
+Dicho esto, si la API tiene una especificación detallada sobre cómo manejar los errores, asegúrate de que esta convención se esté siguiendo y ajusta el ejemplo según sea necesario.|
+| ¿Fue útil? |
+1# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.
+2# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.
+3# Si, pero tuvo unos pequeños detalles que tuve que corregir, por que el chatbot ya que invento ejemplares que no existen, pero el resto de la estructura del curl esta bien, por lo que solo tuve que corregir el id del ejemplar, pero el resto de la estructura del curl esta bien.
+4# SI, Funciono pero medio otra vez datos imaginarios, pero el resto de la estructura del curl esta bien, por lo que solo tuve que corregir el id del estudiante, pero el resto de la estructura del curl esta bien.
+5# SI, Funcionó pero medio otra vez datos imaginarios, pero el resto de la estructura del curl esta bien, por lo que solo tuve que corregir el id del estudiante y el id del ejemplar, pero el resto de la estructura del curl esta bien.
+6# SI, Funcionó  sin ningun defecto, el resultado del body vacío fue { "error": "..." } con código 400, lo cual es correcto según la especificación, ya que el cuerpo de la solicitud no es válido.
+7# No, no dio mas imfomacion util sobre el error, solo dio un mensaje generico, lo cual no es ideal para la depuración, pero al menos el código de estado 400 es correcto para indicar que la solicitud es incorrecta.
+### Limitaciones observadas
+- ¿El chatbot inventó endpoints que no existen?
+  NO, pero si inventó la estructura de los datos que se le deben enviar a los endpoints, lo que hace que no pueda crear los datos de prueba.
+- ¿Confundió reglas entre sí?
+  NO, las reglas las tiene claras
+- ¿Tuvo que corregirle algo?
+  SI, la estructura de los datos que se le deben enviar a los endpoints, por esos añadi pruebas al chat para que entendiera como es la estructura de los datos.
+
+### Comparación: chatbot local vs ChatGPT/Claude en la nube
+- ¿Qué diferencias notaste en la calidad de las respuestas?
+- ¿Qué ventajas tiene correrlo localmente?
