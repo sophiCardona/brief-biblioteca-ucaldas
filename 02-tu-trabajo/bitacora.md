@@ -211,36 +211,117 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
   - `1#: Crea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplarcrea los datos de prueba base para todas las reglas: un estudiante pregrado EST-PRE-01, uno posgrado EST-POS-01, un libro normal LIB-001 con 6 ejemplares y un libro de alta demanda LIB-002 con 1 ejemplar`
 - Qué generó el chatbot:
   - `1# Primero, necesitamos crear el estudiante pregrado y uno de postgrado.`
-  - `### Datos de Prueba:`
-  - `1. **Estudiante Pregrado**`
-    - `- ID: EST-PRE-01`
-    - `- Nombre: Juan Pérez`
-    - `- Tipo de Estudiante: Pregrado`
-  - `2. **Estudiante Posgrado**`
-    - `- ID: EST-POS-01`
-    - `- Nombre: Ana Rodríguez`
-    - `- Tipo de Estudiante: Posgrado`
-  - `3. **Libro Normal**`
-    - `- ID: LIB-001`
-    - `- Título: "Introducción a la Programación"`
-    - `- Autor: John Doe`
-    - `- Tipo: Libro normal`
-  - `4. **Libro de Alta Demanda**`
-    - `- ID: LIB-002`
-    - `- Título: "Teoría de los Juegos"`
-    - `- Autor: John Nash`
-    - `- Tipo: Libro de alta demanda`
-  - `### Creación de Estudiantes y Libros:`
-  - `**Crear Estudiante Pregrado:**`
-  - `**Crear Estudiante Posgrado:**`
-  - `**Crear Libro Normal (LIB-001):**`
-  - `**Crear Libro de Alta Demanda (LIB-002):**`
-  - `**Crear Ejemplares para LIB-001 (6 ejemplares):**`
-  - `**Crear Ejemplar para LIB-002 (1 ejemplar):**`
-  - `**Verificar Datos de Prueba Creados:**`
-  - `- Listar estudiantes: GET /estudiantes`
-  - `- Listar libros y ejemplares: GET /libros y GET /ejemplares/libro/:id_libro`
-  - `Estos datos de prueba te permitirán probar todas las reglas que mencionaste.`
+ 
+  ### Datos de Prueba:
+
+  1. **Estudiante Pregrado**
+    - ID: `EST-PRE-01`
+    - Nombre: Juan Pérez
+    - Tipo de Estudiante: Pregrado
+
+  2. **Estudiante Posgrado**
+    - ID: `EST-POS-01`
+    - Nombre: Ana Rodríguez
+    - Tipo de Estudiante: Posgrado
+
+  3. **Libro Normal**
+    - ID: `LIB-001`
+    - Título: "Introducción a la Programación"
+    - Autor: John Doe
+    - Tipo: Libro normal
+
+  4. **Libro de Alta Demanda**
+    - ID: `LIB-002`
+    - Título: "Teoría de los Juegos"
+    - Autor: John Nash
+    - Tipo: Libro de alta demanda
+
+
+### Creación de Estudiantes y Libros:
+
+**Crear Estudiante Pregrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-PRE-01",
+  "nombre": "Juan Pérez",
+  "tipoEstudiante": "Pregrado"
+}'
+```
+
+**Crear Estudiante Posgrado:**
+
+```bash
+curl -X POST http://localhost:3001/estudiantes \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EST-POS-01",
+  "nombre": "Ana Rodríguez",
+  "tipoEstudiante": "Posgrado"
+}'
+```
+
+**Crear Libro Normal (LIB-001):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-001",
+  "titulo": "Introducción a la Programación",
+  "autor": "John Doe",
+  "tipo": "Normal"
+}'
+```
+
+**Crear Libro de Alta Demanda (LIB-002):**
+
+```bash
+curl -X POST http://localhost:3001/libros \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "LIB-002",
+  "titulo": "Teoría de los Juegos",
+  "autor": "John Nash",
+  "tipo": "AltaDemanda"
+}'
+```
+
+**Crear Ejemplares para LIB-001 (6 ejemplares):**
+
+```bash
+for i in {1..6}; do
+  curl -X POST http://localhost:3001/ejemplares \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "EJ-001-'$i'",
+    "libroId": "LIB-001",
+    "disponible": true
+  }'
+done
+```
+
+**Crear Ejemplar para LIB-002 (1 ejemplar):**
+
+```bash
+curl -X POST http://localhost:3001/ejemplares \
+-H "Content-Type: application/json" \
+-d '{
+  "id": "EJ-002",
+  "libroId": "LIB-002",
+  "disponible": true
+}'
+```
+
+**Verificar Datos de Prueba Creados:**
+
+- Listar estudiantes: `GET /estudiantes`
+- Listar libros y ejemplares: `GET /libros` y `GET /ejemplares/libro/:id_libro`
+
+Estos datos de prueba te permitirán probar todas las reglas que mencionaste.|
+
 - ¿Fue útil?
   - `1# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.`
 
@@ -250,11 +331,69 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
 - Qué generó el chatbot:
   - `2# Chatbot: ### Prueba de RN1 (Un estudiante de pregrado no puede tener más de 3 préstamos activos)`
   - `Primero, necesitamos crear tres préstamos válidos para el estudiante EST-PRE-01 con libros disponibles y luego intentar crear un cuarto préstamo.`
-  - `#### 1. Crear el primer préstamo:`
-  - `#### 2. Crear el segundo préstamo:`
-  - `#### 3. Crear el tercer préstamo:`
-  - `#### 4. Intentar crear el cuarto préstamo:`
-  - `### EJECUTAR:`
+
+#### 1. Crear el primer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-1"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 2. Crear el segundo préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-2"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 3. Crear el tercer préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-001-3"
+}'
+```
+
+**Esperado:** Código HTTP `201 Created`.
+
+#### 4. Intentar crear el cuarto préstamo:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
+
+**Esperado:** Código HTTP `409 Conflict`.
+
+### EJECUTAR:
+
+```bash
+curl -X POST http://localhost:3001/prestamos \
+-H "Content-Type: application/json" \
+-d '{
+  "estudianteId": "EST-PRE-01",
+  "ejemplarId": "EJ-002"
+}'
+```
   - `Si el estudiante EST-PRE-01 intenta crear un cuarto préstamo, debería recibir un error 409 Conflict porque ha alcanzado su límite de préstamos activos (3)`
 - ¿Fue útil?
   - `2# No, porque el chatbot no tiene contexto de como es la estructura de las entidades a las que les esta haciendo curl, lo que ocaciona que los endpoints no sean correctos, y por lo tanto no pueda crear los datos de prueba.`
@@ -265,12 +404,43 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
 - Qué generó el chatbot:
   - `3# Chatbot: Claro, aquí tienes una prueba completa de la regla RN2, que establece que un estudiante de posgrado no puede tener más de 5 préstamos activos:`
   - `### Prueba RN2: Crear los 5 préstamos válidos para el estudiante de posgrado y luego intentar el sexto`
-  - `#### Paso 1: Crear un préstamo válido para el estudiante de posgrado`
-  - `#### Paso 2: Crear un segundo préstamo válido para el estudiante de posgrado`
-  - `#### Paso 3: Crear un tercer préstamo válido para el estudiante de posgrado`
-  - `#### Paso 4: Crear un cuarto préstamo válido para el estudiante de posgrado`
-  - `#### Paso 5: Crear un quinto préstamo válido para el estudiante de posgrado`
-  - `#### Paso 6: Intentar crear el sexto préstamo (debería fallar con conflict)`
+
+#### Paso 1: Crear un préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-005","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-24T00:00:00.000Z"}'
+```
+
+#### Paso 2: Crear un segundo préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-006","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-008","fecha_prestamo":"2026-05-25T00:00:00.000Z"}'
+```
+
+#### Paso 3: Crear un tercer préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-007","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-009","fecha_prestamo":"2026-05-26T00:00:00.000Z"}'
+```
+
+#### Paso 4: Crear un cuarto préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-008","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-010","fecha_prestamo":"2026-05-27T00:00:00.000Z"}'
+```
+
+#### Paso 5: Crear un quinto préstamo válido para el estudiante de posgrado
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-009","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-011","fecha_prestamo":"2026-05-28T00:00:00.000Z"}'
+```
+
+#### Paso 6: Intentar crear el sexto préstamo (debería fallar con conflict)
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-010","estudiante_id":"EST-POS-01","ejemplar_id":"EJ-012","fecha_prestamo":"2026-05-29T00:00:00.000Z"}'
+
+```
   - `#### Resultado esperado:`
   - `El último comando (Paso 6) debe devolver un error 409 Conflict indicando que el estudiante de posgrado ya tiene 5 préstamos activos y no puede tomar más.`
   - `Este proceso te permite verificar que la regla RN2 está funcionando correctamente.`
@@ -283,8 +453,19 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
 - Qué generó el chatbot:
   - `4# Chatbot: Claro, aquí tienes una prueba completa de la regla RN5, que establece que un ejemplar que ya está prestado no puede prestarse de nuevo:`
   - `### Prueba RN5: Intentar prestar un ejemplar que ya está prestado`
-  - `#### Paso 1: Crear un préstamo válido para el ejemplar`
-  - `#### Paso 2: Intentar crear un nuevo préstamo con el mismo ejemplar (debería fallar)`
+  
+#### Paso 1: Crear un préstamo válido para el ejemplar
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-011","estudiante_id":"EST-PRE-01","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Paso 2: Intentar crear un nuevo préstamo con el mismo ejemplar (debería fallar)
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-012","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-007","fecha_prestamo":"2026-05-31T00:00:00.000Z"}'
+```
+
   - `#### Resultado esperado:`
   - `El último comando (Paso 2) debe devolver un error 409 Conflict indicando que el ejemplar ya está prestado y no puede ser prestado de nuevo.`
   - `Este proceso te permite verificar que la regla RN5 está funcionando correctamente.`
@@ -297,8 +478,19 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
 - Qué generó el chatbot:
   - `5# Chatbot: Claro, aquí tienes una prueba completa para verificar que el plazo del préstamo es correcto para un libro normal y uno de alta demanda:`
   - `### Prueba RN6: Verificar los plazos de préstamo`
-  - `#### Paso 1: Crear un préstamo con un libro normal`
-  - `#### Paso 2: Crear un préstamo con un libro de alta demanda`
+
+#### Paso 1: Crear un préstamo con un libro normal
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-013","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-008","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
+#### Paso 2: Crear un préstamo con un libro de alta demanda
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-014","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-013","fecha_prestamo":"2026-05-30T00:00:00.000Z"}'
+```
+
   - `#### Resultado esperado:`
   - `El primer comando (Paso 1) debe devolver un id de préstamo con una fecha de vencimiento que sea el día 15 de mayo de 2026.`
   - `El segundo comando (Paso 2) debe devolver un id de préstamo con una fecha de vencimiento que sea el día 3 de junio de 2026.`
@@ -311,11 +503,30 @@ También quedó claro que la IA responde mejor cuando se le fija el stack y la i
   - `6# genera pruebas de entradas inválidas: body vacío, estudiante inexistente y ejemplar inexistente`
 - Qué generó el chatbot:
   - `6# Chatbot: Claro, aquí tienes pruebas para probar las entradas inválidas como cuerpo vacío, estudiante inexistente y ejemplar inexistente:`
-  - `### Prueba de entrada inválida: Cuerpo vacío`
-  - `#### Resultado esperado:`
-  - `### Prueba de entrada inválida: Estudiante inexistente`
-  - `#### Resultado esperado:`
-  - `### Prueba de entrada inválida: Ejemplar inexistente`
+
+### Prueba de entrada inválida: Cuerpo vacío
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{}'
+```
+
+#### Resultado esperado:
+Debería devolver un error `400 Bad Request` indicando que el cuerpo de la solicitud no es válido.
+
+### Prueba de entrada inválida: Estudiante inexistente
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-015","estudiante_id":"EST-PRE-99","ejemplar_id":"EJ-014","fecha_prestamo":"2026-06-01T00:00:00.000Z"}'
+```
+
+#### Resultado esperado:
+Debería devolver un error `404 Not Found` indicando que el estudiante no existe.
+
+### Prueba de entrada inválida: Ejemplar inexistente
+```sh
+EJECUTAR:
+curl -X POST http://localhost:3001/prestamos -H "Content-Type: application/json" -d '{"id":"PRES-016","estudiante_id":"EST-PRE-02","ejemplar_id":"EJ-99","fecha_prestamo":"2026-06-01T00:00:00.000Z"}'
+```
   - `#### Resultado esperado:`
   - `Estas pruebas te ayudan a verificar que la API maneja correctamente las entradas inválidas y devuelve los errores apropiados.`
 - ¿Fue útil?
